@@ -5,6 +5,7 @@ import { ARTICLES } from '../data/articles'
 import { getRecommendedArticles } from '../utils/recommendations'
 import SleepDurationChart from '../components/SleepDurationChart'
 import PhysicalActivityChart from '../components/PhysicalActivityChart'
+import { calculateSnapshotFromResponses } from '../utils/scoring'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -481,14 +482,37 @@ function BrainPet({ petState, onPoke, isPoking }) {
 function Dashboard() {
   const location = useLocation()
   const storedSnapshot = localStorage.getItem('brainboostSnapshot')
-  const snapshot = location.state ?? (storedSnapshot ? JSON.parse(storedSnapshot) : DEFAULT_SNAPSHOT)
+  let parsedSnapshot = null
+
+  if (storedSnapshot) {
+    try {
+      parsedSnapshot = JSON.parse(storedSnapshot)
+    } catch {
+      parsedSnapshot = null
+    }
+  }
+
+  const baseSnapshot = location.state ?? parsedSnapshot ?? DEFAULT_SNAPSHOT
 
   const [dismissedWarnings, setDismissedWarnings] = useState([])
   const [showHistory,       setShowHistory]        = useState(false)
   const [isPoking,          setIsPoking]           = useState(false)
   const [pokeMessage,       setPokeMessage]        = useState(null)
 
-  if (!snapshot) return <Navigate to="/onboarding" replace />
+  if (!baseSnapshot) return <Navigate to="/onboarding" replace />
+
+  const scoringInput =
+    baseSnapshot.questionnaireResponses ?? baseSnapshot.responses
+  const recomputedScoring = calculateSnapshotFromResponses(scoringInput)
+
+  const snapshot = recomputedScoring
+    ? {
+        ...baseSnapshot,
+        overallScore: recomputedScoring.overallScore,
+        overallInterpretation: recomputedScoring.overallInterpretation,
+        domainScores: recomputedScoring.domainScoresLegacy,
+      }
+    : baseSnapshot
 
   const petState  = getPetState(snapshot)
   const petSpeech = getPetSpeech(snapshot)
@@ -509,8 +533,8 @@ function Dashboard() {
   const priority            = sortedDomains[sortedDomains.length - 1]
   const secondaryPriority   = sortedDomains[sortedDomains.length - 2]
   const recommendedArticles = getRecommendedArticles(snapshot, ARTICLES, 3)
-  const selectedSleepBand   = SLEEP_BANDS[snapshot.responses?.Q1]
-  const selectedActivityBand = ACTIVITY_BANDS[snapshot.responses?.Q4]
+  const selectedSleepBand = SLEEP_BANDS[scoringInput?.Q1]
+  const selectedActivityBand = ACTIVITY_BANDS[scoringInput?.Q2 ?? snapshot.responses?.Q4]
 
   const today = new Intl.DateTimeFormat('en-AU', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',

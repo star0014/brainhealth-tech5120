@@ -1,6 +1,12 @@
 export function getSnapshot() {
   const storedSnapshot = localStorage.getItem('brainboostSnapshot')
-  return storedSnapshot ? JSON.parse(storedSnapshot) : null
+  if (!storedSnapshot) return null
+
+  try {
+    return JSON.parse(storedSnapshot)
+  } catch {
+    return null
+  }
 }
 
 export function getPriorityDomains(snapshot, count = 2) {

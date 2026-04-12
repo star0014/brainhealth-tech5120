@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Onboarding.css'
+import { calculateSnapshotFromResponses } from '../utils/scoring'
 
 const QUESTIONNAIRE_STEPS = [
   {
@@ -65,38 +66,8 @@ const QUESTIONNAIRE_STEPS = [
   },
 ]
 
-const DOMAIN_CONFIG = {
-  sleep_rhythm: { questionId: 'Q1', label: 'Sleep Rhythm', reverse: false },
-  move_mode: { questionId: 'Q2', label: 'Move Mode', reverse: false },
-  screen_exposure: { questionId: 'Q3', label: 'Screen Exposure', reverse: true },
-  social_energy: { questionId: 'Q4', label: 'Social Energy', reverse: false },
-}
-
-const LEGACY_DOMAIN_KEYS = {
-  sleep_rhythm: 'sleep_rhythm',
-  move_mode: 'move_mode',
-  screen_exposure: 'cognitive_strain',
-  social_energy: 'social_energy',
-}
-
 const SCORE_RING_RADIUS = 50
 const SCORE_RING_CIRCUMFERENCE = 2 * Math.PI * SCORE_RING_RADIUS
-
-function reverseScore(value) {
-  return 6 - value
-}
-
-function calculateDomainScore(value, reverse = false) {
-  const adjusted = reverse ? reverseScore(value) : value
-  return adjusted * 20
-}
-
-function interpretScore(score) {
-  if (score >= 75) return 'strong current habits'
-  if (score >= 50) return 'moderate, room to improve'
-  if (score >= 25) return 'noticeable strain or weaker habits'
-  return 'priority area for support'
-}
 
 function getScoreTone(score) {
   if (score >= 75) {
@@ -152,6 +123,28 @@ function AnimatedScore({ value, duration = 1100 }) {
   return displayValue
 }
 
+function createDashboardPayload(scoring, responses) {
+  if (!scoring) return null
+
+  const dashboardResponses = {
+    Q1: scoring.normalizedResponses.Q1,
+    Q2: scoring.normalizedResponses.Q2,
+    Q3: scoring.normalizedResponses.Q3,
+    Q4: scoring.normalizedResponses.Q4,
+    Q4_social: scoring.normalizedResponses.Q4,
+  }
+
+  return {
+    completedAt: new Date().toISOString(),
+    questionnaireVersion: 'iteration-1-final-4q',
+    responses: dashboardResponses,
+    questionnaireResponses: responses,
+    overallScore: scoring.overallScore,
+    overallInterpretation: scoring.overallInterpretation,
+    domainScores: scoring.domainScoresLegacy,
+  }
+}
+
 function Onboarding() {
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
@@ -191,50 +184,30 @@ function Onboarding() {
     }
   }
 
-  const domainScores = Object.entries(DOMAIN_CONFIG).map(([key, config]) => ({
-    key,
-    label: config.label,
-    score: calculateDomainScore(responses[config.questionId], config.reverse),
-  }))
-
-  const adjustedScores = Object.values(DOMAIN_CONFIG).map((config) =>
-    config.reverse ? reverseScore(responses[config.questionId]) : responses[config.questionId],
-  )
-  const overallScore = Math.round(
-    (adjustedScores.reduce((sum, value) => sum + value, 0) / adjustedScores.length) * 20,
-  )
-  const interpretation = interpretScore(overallScore)
+  const scoring = calculateSnapshotFromResponses(responses)
+  const domainScores = scoring?.domainScoresLatest ?? []
+  const overallScore = scoring?.overallScore ?? 0
+  const interpretation = scoring?.overallInterpretation ?? 'priority area for support'
   const insights = buildInsights(domainScores)
   const progressPercent = ((step + 1) / totalSteps) * 100
   const scoreTone = getScoreTone(overallScore)
 
-  const finishOnboarding = () => {
-    const dashboardResponses = {
-      Q1: responses.Q1,
-      Q2: responses.Q2,
-      Q3: responses.Q3,
-      Q4: responses.Q2,
-      Q4_social: responses.Q4,
-    }
-
-    const dashboardDomainScores = domainScores.map((domain) => ({
-      ...domain,
-      key: LEGACY_DOMAIN_KEYS[domain.key],
-    }))
-
-    const payload = {
-      completedAt: new Date().toISOString(),
-      questionnaireVersion: 'iteration-1-final-4q',
-      responses: dashboardResponses,
-      questionnaireResponses: responses,
-      overallScore,
-      overallInterpretation: interpretation,
-      domainScores: dashboardDomainScores,
-    }
+  const handleGoToDashboard = () => {
+    const payload = createDashboardPayload(scoring, responses)
+    if (!payload) return
 
     localStorage.setItem('brainboostSnapshot', JSON.stringify(payload))
     navigate('/dashboard', { state: payload })
   }
+
+  useEffect(() => {
+    if (!isResultStep) return
+
+    const payload = createDashboardPayload(scoring, responses)
+    if (!payload) return
+
+    localStorage.setItem('brainboostSnapshot', JSON.stringify(payload))
+  }, [isResultStep, responses, scoring])
 
   return (
     <div className="ob-wrap">
@@ -405,7 +378,7 @@ function Onboarding() {
               <button type="button" className="btn-back" onClick={prevStep}>
                 Back
               </button>
-              <button type="button" className="btn-next" onClick={finishOnboarding}>
+              <button type="button" className="btn-next" onClick={handleGoToDashboard}>
                 Go to my dashboard
               </button>
             </div>
