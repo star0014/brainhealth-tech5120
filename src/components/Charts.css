@@ -1,0 +1,222 @@
+.sleep-chart-card,
+.physical-chart-card {
+  background: white;
+  border-radius: 18px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 0.5px solid rgba(74,158,219,0.15);
+  box-shadow: 0 1px 4px rgba(74,158,219,0.08);
+}
+
+.sleep-chart-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sleep-chart-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #90B4D4;
+  margin-bottom: 6px;
+}
+
+.sleep-chart-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1A2E28;
+  margin-bottom: 8px;
+}
+
+.sleep-chart-copy {
+  font-size: 13px;
+  color: #90B4D4;
+  line-height: 1.6;
+  max-width: 400px;
+}
+
+.sleep-chart-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sleep-chart-tab {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  border: 0.5px solid rgba(74,158,219,0.3);
+  background: #EBF5FF;
+  color: #2B6CB0;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.sleep-chart-tab.active {
+  background: #4A9EDB;
+  color: white;
+  border-color: #4A9EDB;
+}
+
+.sleep-chart-highlight {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.sleep-highlight-stat {
+  background: #F7F9FB;
+  border-radius: 12px;
+  padding: 12px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sleep-highlight-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #90B4D4;
+}
+
+.sleep-highlight-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A2E28;
+}
+
+.sleep-chart-shell {
+  position: relative;
+}
+
+.sleep-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sleep-grid-line {
+  stroke: #EBF5FF;
+  stroke-width: 1;
+}
+
+.sleep-axis-text {
+  font-size: 11px;
+  fill: #90B4D4;
+  font-family: inherit;
+}
+
+.sleep-axis-text.left {
+  text-anchor: end;
+}
+
+.sleep-axis-pill {
+  fill: #EBF5FF;
+}
+
+.sleep-average-line {
+  stroke: #90B4D4;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.sleep-average-label {
+  font-size: 12px;
+  fill: #1A2E28;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.sleep-user-marker-ring {
+  fill: #FF8C42;
+  opacity: 0.3;
+}
+
+.sleep-user-marker-dot {
+  fill: #FF8C42;
+}
+
+.sleep-user-marker-group {
+  cursor: pointer;
+}
+
+.sleep-user-popup {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border: 0.5px solid rgba(74,158,219,0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(74,158,219,0.15);
+  font-family: inherit;
+}
+
+.sleep-user-popup-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #90B4D4;
+  margin-bottom: 4px;
+}
+
+.sleep-user-popup-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1A2E28;
+  margin-bottom: 4px;
+}
+
+.sleep-user-popup-copy {
+  font-size: 13px;
+  color: #90B4D4;
+  line-height: 1.5;
+}
+
+.sleep-tooltip {
+  position: absolute;
+  top: 10px;
+  left: 50px;
+  background: white;
+  border: 0.5px solid rgba(74,158,219,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(74,158,219,0.15);
+}
+
+.sleep-tooltip-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #90B4D4;
+  margin-bottom: 4px;
+}
+
+.sleep-tooltip-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A2E28;
+  margin-bottom: 2px;
+}
+
+.sleep-tooltip-value {
+  font-size: 13px;
+  color: #4A9EDB;
+  font-weight: 500;
+}
