@@ -1,6 +1,11 @@
+// Physical Activity Chart component.
+// Renders an SVG line chart with two views: daily inactivity hours and MVPA (moderate + vigorous activity).
+// If the user's activity band is provided, an orange marker is plotted on the MVPA view.
 import { useMemo, useState } from 'react'
 import './Charts.css'
 
+// Population distribution data for each activity view.
+// 'inactivity' shows sedentary time bands; 'mvpa' shows active time bands.
 const SERIES = {
   inactivity: {
     label: 'Daily inactivity',
@@ -45,27 +50,32 @@ const SERIES = {
   },
 }
 
-const CHART_WIDTH = 640
+// SVG canvas dimensions and margins
+const CHART_WIDTH  = 640
 const CHART_HEIGHT = 320
 const MARGIN = { top: 20, right: 24, bottom: 52, left: 42 }
-const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right
-const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom
-const MAX_Y = 45
+const INNER_WIDTH  = CHART_WIDTH  - MARGIN.left - MARGIN.right
+const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top  - MARGIN.bottom
+const MAX_Y = 45  // y-axis cap at 45%
 
+// Maps a data point index to an SVG x pixel position (evenly spaced)
 function xScale(index, total) {
   if (total <= 1) return MARGIN.left
   return MARGIN.left + (index / (total - 1)) * INNER_WIDTH
 }
 
+// Same as xScale but accepts a fractional position — used for the average line
 function xScaleContinuous(position, total) {
   if (total <= 1) return MARGIN.left
   return MARGIN.left + (position / (total - 1)) * INNER_WIDTH
 }
 
+// Maps a percentage value to an SVG y pixel position (y increases downward in SVG)
 function yScale(value) {
   return MARGIN.top + INNER_HEIGHT - (value / MAX_Y) * INNER_HEIGHT
 }
 
+// Builds the SVG path string for the line itself
 function getLinePath(points) {
   return points
     .map((point, index) => {
@@ -75,6 +85,7 @@ function getLinePath(points) {
     .join(' ')
 }
 
+// Builds the SVG path string for the filled area under the line
 function getAreaPath(points) {
   const line = points.map((point, index) => {
     const command = index === 0 ? 'M' : 'L'
@@ -89,30 +100,32 @@ function getAreaPath(points) {
   ].join(' ')
 }
 
+// Finds the user's marker position on the MVPA view.
+// Returns null for the inactivity view since Q2 answers don't map to inactivity bands.
 function getUserPlotPoint(seriesKey, userActivityBand) {
   if (!userActivityBand || seriesKey !== 'mvpa') return null
 
   const point = SERIES.mvpa.points.find((entry) => entry.key === userActivityBand.key)
   if (!point) return null
 
-  return {
-    label: userActivityBand.label,
-    fullLabel: point.fullLabel,
-    value: point.value,
-  }
+  return { label: userActivityBand.label, fullLabel: point.fullLabel, value: point.value }
 }
 
+// userActivityBand — the band object for the user's Q2 answer (from Dashboard ACTIVITY_BANDS map)
 function PhysicalActivityChart({ userActivityBand }) {
-  const [activeSeries, setActiveSeries] = useState('mvpa')
-  const [hoveredPoint, setHoveredPoint] = useState(null)
-  const [showUserPopup, setShowUserPopup] = useState(false)
+  const [activeSeries, setActiveSeries] = useState('mvpa') // which dataset tab is shown
+  const [hoveredPoint, setHoveredPoint] = useState(null)   // point the mouse is over
+  const [showUserPopup, setShowUserPopup] = useState(false) // whether the user marker popup is open
   const current = SERIES[activeSeries]
+
+  // Memoise paths so they're only recalculated when the series changes
   const linePath = useMemo(() => getLinePath(current.points), [current.points])
   const areaPath = useMemo(() => getAreaPath(current.points), [current.points])
-  const highestPoint = [...current.points].sort((left, right) => right.value - left.value)[0]
-  const userPoint = getUserPlotPoint(activeSeries, userActivityBand)
+  const highestPoint   = [...current.points].sort((left, right) => right.value - left.value)[0]
+  const userPoint      = getUserPlotPoint(activeSeries, userActivityBand)
+  // Index of the user's band in the current series array (used to calculate x position)
   const userPointIndex = userPoint ? current.points.findIndex((point) => point.fullLabel === userPoint.fullLabel) : -1
-  const averageX = xScaleContinuous(current.averagePosition, current.points.length)
+  const averageX       = xScaleContinuous(current.averagePosition, current.points.length)
 
   return (
     <div className="physical-chart-card">

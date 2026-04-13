@@ -1,3 +1,6 @@
+// Dashboard page — the main results screen shown after onboarding.
+// Reads the snapshot from router state or localStorage, then renders the brain pet,
+// domain score cards, priority alerts, standout summary, article picks, and benchmark charts.
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, Navigate } from 'react-router-dom'
 import './Dashboard.css'
@@ -10,18 +13,8 @@ import { calculateSnapshotFromResponses } from '../utils/scoring'
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
-const DEFAULT_SNAPSHOT = {
-  overallScore: 70,
-  overallInterpretation: 'moderate, room to improve',
-  responses: { Q1: 3 },
-  domainScores: [
-    { key: 'sleep_rhythm',    label: 'Sleep Rhythm',    score: 67 },
-    { key: 'move_mode',       label: 'Move Mode',       score: 75 },
-    { key: 'cognitive_strain',label: 'Cognitive Strain',score: 58 },
-    { key: 'social_energy',   label: 'Social Energy',   score: 79 },
-  ],
-}
 
+// Emoji icons displayed next to each domain score bar
 const DOMAIN_ICONS = {
   sleep_rhythm:     '🌙',
   move_mode:        '🏃',
@@ -29,8 +22,10 @@ const DOMAIN_ICONS = {
   social_energy:    '🤝',
 }
 
+// Reference average sleep hours for the 18-24 age group (used in the standout card)
 const SLEEP_AVERAGE_18_24 = { overall: 7.6, weeknight: 7.51, weekend: 7.59 }
 
+// Maps Q1 answer codes (1-5) to a sleep band object used by SleepDurationChart
 const SLEEP_BANDS = {
   1: { code: 1, label: 'less than 6 hours',        midpoint: 5.5, share: 9.5  },
   2: { code: 2, label: '6 to less than 7 hours',   midpoint: 6.5, share: 18.0 },
@@ -39,6 +34,7 @@ const SLEEP_BANDS = {
   5: { code: 5, label: '9 hours or more',           midpoint: 9.6, share: 5.6  },
 }
 
+// Maps Q2 answer codes (1-5) to an activity band object used by PhysicalActivityChart
 const ACTIVITY_BANDS = {
   1: { key: 'lt30',    label: 'Less than 30 minutes a day' },
   2: { key: '30to60',  label: 'About 30 minutes to less than 1 hour a day' },
@@ -135,6 +131,8 @@ const POKE_MESSAGES_SAD = [
   "Don't give up on me. 🫂",
 ]
 
+// Determines which mood state the pet should be in based on the overall score
+// and the lowest-scoring domain. Domain details refine the mood within a score tier.
 function getPetState(snapshot) {
   const score = snapshot.overallScore
   const get   = (key) => snapshot.domainScores.find(d => d.key === key)?.score ?? 50
@@ -152,6 +150,7 @@ function getPetState(snapshot) {
   return 'sad'
 }
 
+// Returns the pet's speech bubble text, personalised by score tier and weakest domain
 function getPetSpeech(snapshot) {
   const { overallScore, domainScores } = snapshot
   const get = (key) => domainScores.find(d => d.key === key)?.score ?? 50
@@ -176,9 +175,10 @@ function getPetSpeech(snapshot) {
   return "I'm not feeling well at all... 😢 My scores are really suffering. Please take better care of me."
 }
 
+// Returns the label text for the poke button, adjusted for the pet's current mood
 function getPokeLabel(petState) {
-  if (petState === 'sad')     return '🫂 Give a hug'
-  if (petState === 'tired')   return '☕ Wake me up!'
+  if (petState === 'sad')      return '🫂 Give a hug'
+  if (petState === 'tired')    return '☕ Wake me up!'
   if (petState === 'stressed') return '😌 Calm me down'
   return '👆 Poke me!'
 }
@@ -186,12 +186,15 @@ function getPokeLabel(petState) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility helpers
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Returns a CSS tone class ('good' | 'warn' | 'bad') based on a domain score
 function statusTone(score) {
   if (score >= 75) return 'good'
   if (score >= 50) return 'warn'
   return 'bad'
 }
 
+// Returns a short status label shown next to each domain score bar
 function statusCopy(score) {
   if (score >= 75) return 'Locked in'
   if (score >= 50) return 'In progress'
@@ -201,6 +204,8 @@ function statusCopy(score) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Neural particle background
 // ─────────────────────────────────────────────────────────────────────────────
+// Renders an animated canvas with floating dots connected by lines when they get close.
+// Re-initialises on window resize to always fill the viewport.
 function NeuralBackground() {
   const canvasRef = useRef(null)
   useEffect(() => {
@@ -209,35 +214,41 @@ function NeuralBackground() {
     const ctx = canvas.getContext('2d')
     let animId
     let particles = []
+
+    // Creates 55 particles scattered randomly across the canvas
     const init = () => {
       canvas.width  = window.innerWidth
       canvas.height = window.innerHeight
       particles = Array.from({ length: 55 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
-        r:  Math.random() * 1.8 + 0.5,
-        a:  Math.random() * 0.45 + 0.15,
+        x:  Math.random() * canvas.width,
+        y:  Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.45,  // slow horizontal drift
+        vy: (Math.random() - 0.5) * 0.45,  // slow vertical drift
+        r:  Math.random() * 1.8 + 0.5,     // radius between 0.5 and 2.3
+        a:  Math.random() * 0.45 + 0.15,   // opacity between 0.15 and 0.6
       }))
     }
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
         p.x += p.vx; p.y += p.vy
+        // Bounce off edges
         if (p.x < 0 || p.x > canvas.width)  p.vx *= -1
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(74,158,219,${p.a})`
         ctx.fill()
+        // Draw a faint line to every nearby particle
         for (let j = i + 1; j < particles.length; j++) {
-          const q = particles[j]
+          const q    = particles[j]
           const dist = Math.hypot(p.x - q.x, p.y - q.y)
           if (dist < 140) {
             ctx.beginPath()
             ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y)
+            // Line fades out as distance increases
             ctx.strokeStyle = `rgba(74,158,219,${0.13 * (1 - dist / 140)})`
             ctx.lineWidth = 0.6
             ctx.stroke()
@@ -246,16 +257,18 @@ function NeuralBackground() {
       }
       animId = requestAnimationFrame(draw)
     }
+
     init()
     window.addEventListener('resize', init)
     draw()
+    // Clean up animation loop and event listener when component unmounts
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', init) }
   }, [])
   return <canvas ref={canvasRef} className="neural-canvas" />
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Animated score counter
+// Animated score counter — counts up from 0 to target using a cubic ease-out curve
 // ─────────────────────────────────────────────────────────────────────────────
 function AnimatedScore({ target, duration = 1800 }) {
   const [val, setVal] = useState(0)
@@ -263,7 +276,7 @@ function AnimatedScore({ target, duration = 1800 }) {
     const start = performance.now()
     const tick = (now) => {
       const t = Math.min((now - start) / duration, 1)
-      setVal(Math.round((1 - Math.pow(1 - t, 3)) * target))
+      setVal(Math.round((1 - Math.pow(1 - t, 3)) * target)) // cubic ease-out
       if (t < 1) requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
@@ -272,13 +285,15 @@ function AnimatedScore({ target, duration = 1800 }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3-D tilt handlers
+// 3-D tilt handlers — attach to cards via spread: <div {...tilt}>
+// Tilts the card toward the mouse cursor, creating a subtle 3D effect.
 // ─────────────────────────────────────────────────────────────────────────────
 function makeTiltHandlers(strength = 10) {
   return {
     onMouseMove(e) {
       const el = e.currentTarget
       const { left, top, width, height } = el.getBoundingClientRect()
+      // Calculate rotation based on how far the cursor is from the card centre
       const rotY = ((e.clientX - left - width  / 2) / (width  / 2)) * strength
       const rotX = -((e.clientY - top  - height / 2) / (height / 2)) * strength
       el.style.transform  = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.03,1.03,1.03)`
@@ -481,6 +496,8 @@ function BrainPet({ petState, onPoke, isPoking }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function Dashboard() {
   const location = useLocation()
+
+  // Try to read the snapshot from localStorage (persisted after onboarding)
   const storedSnapshot = localStorage.getItem('brainboostSnapshot')
   let parsedSnapshot = null
 
@@ -488,54 +505,63 @@ function Dashboard() {
     try {
       parsedSnapshot = JSON.parse(storedSnapshot)
     } catch {
+      // Ignore malformed data — falls through to null
       parsedSnapshot = null
     }
   }
 
-  const baseSnapshot = location.state ?? parsedSnapshot ?? DEFAULT_SNAPSHOT
+  // Prefer router state (just came from onboarding) then fall back to localStorage
+  const baseSnapshot = location.state ?? parsedSnapshot
 
-  const [dismissedWarnings, setDismissedWarnings] = useState([])
-  const [showHistory,       setShowHistory]        = useState(false)
-  const [isPoking,          setIsPoking]           = useState(false)
-  const [pokeMessage,       setPokeMessage]        = useState(null)
+  const [dismissedWarnings, setDismissedWarnings] = useState([])  // keys of dismissed alert cards
+  const [showHistory,       setShowHistory]        = useState(false) // toggle for dismissed list
+  const [isPoking,          setIsPoking]           = useState(false) // prevents rapid repeat pokes
+  const [pokeMessage,       setPokeMessage]        = useState(null)  // temporary poke response text
 
+  // If there is no snapshot at all, redirect back to onboarding
   if (!baseSnapshot) return <Navigate to="/onboarding" replace />
 
-  const scoringInput =
-    baseSnapshot.questionnaireResponses ?? baseSnapshot.responses
+  // Re-run scoring from raw responses so the displayed values stay in sync with scoring.js
+  const scoringInput     = baseSnapshot.questionnaireResponses ?? baseSnapshot.responses
   const recomputedScoring = calculateSnapshotFromResponses(scoringInput)
 
+  // Merge recomputed scores on top of the base snapshot (overrides any stale cached values)
   const snapshot = recomputedScoring
     ? {
         ...baseSnapshot,
-        overallScore: recomputedScoring.overallScore,
+        overallScore:          recomputedScoring.overallScore,
         overallInterpretation: recomputedScoring.overallInterpretation,
-        domainScores: recomputedScoring.domainScoresLegacy,
+        domainScores:          recomputedScoring.domainScoresLegacy,
       }
     : baseSnapshot
 
   const petState  = getPetState(snapshot)
   const petSpeech = getPetSpeech(snapshot)
 
+  // Triggers the poke animation and picks a random response message
   const handlePoke = () => {
     if (isPoking) return
     setIsPoking(true)
     const pool = snapshot.overallScore < 50 ? POKE_MESSAGES_SAD : POKE_MESSAGES_HAPPY
     setPokeMessage(pool[Math.floor(Math.random() * pool.length)])
-    setTimeout(() => setIsPoking(false), 520)
-    setTimeout(() => setPokeMessage(null), 2800)
+    setTimeout(() => setIsPoking(false), 520)   // re-enable after animation
+    setTimeout(() => setPokeMessage(null), 2800) // clear speech bubble after a moment
   }
 
+  // Adds a warning card key to the dismissed list so it hides from view
   const dismissWarning = (key) => setDismissedWarnings(prev => [...prev, key])
 
+  // Sort domains high-to-low so strongest[0] and priority[last] are easy to pick
   const sortedDomains       = [...snapshot.domainScores].sort((a, b) => b.score - a.score)
-  const strongest           = sortedDomains[0]
-  const priority            = sortedDomains[sortedDomains.length - 1]
-  const secondaryPriority   = sortedDomains[sortedDomains.length - 2]
+  const strongest           = sortedDomains[0]                       // highest-scoring domain
+  const priority            = sortedDomains[sortedDomains.length - 1] // lowest-scoring domain
+  const secondaryPriority   = sortedDomains[sortedDomains.length - 2] // second-lowest domain
   const recommendedArticles = getRecommendedArticles(snapshot, ARTICLES, 3)
-  const selectedSleepBand = SLEEP_BANDS[scoringInput?.Q1]
-  const selectedActivityBand = ACTIVITY_BANDS[scoringInput?.Q2 ?? snapshot.responses?.Q4]
+  // Look up chart band objects from Q1/Q2 answer codes
+  const selectedSleepBand     = SLEEP_BANDS[scoringInput?.Q1]
+  const selectedActivityBand  = ACTIVITY_BANDS[scoringInput?.Q2 ?? snapshot.responses?.Q4]
 
+  // Format today's date in Australian style, e.g. "Monday, 13 April 2026"
   const today = new Intl.DateTimeFormat('en-AU', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   }).format(new Date())

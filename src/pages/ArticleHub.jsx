@@ -1,20 +1,27 @@
+// Article Hub page. Shows all articles with topic filters and a personalised
+// recommendations panel based on the user's lowest-scoring domains.
 import { useMemo, useState } from 'react'
 import { ARTICLES, TOPIC_META } from '../data/articles'
 import { getRecommendedArticles, getSnapshot } from '../utils/recommendations'
 import './ArticleHub.css'
 
+// All valid filter options — 'all' shows every article
 const FILTERS = ['all', 'sleep_rhythm', 'move_mode', 'cognitive_strain', 'social_energy']
 
 function ArticleHub() {
-  const [filter, setFilter] = useState('all')
-  const [selected, setSelected] = useState(null)
+  const [filter, setFilter] = useState('all')     // currently selected topic filter
+  const [selected, setSelected] = useState(null)  // article open in the modal (null = closed)
+
+  // Load the saved snapshot to personalise the recommendations panel
   const snapshot = getSnapshot()
 
+  // Only recompute recommended articles when the snapshot changes
   const recommendedArticles = useMemo(
     () => getRecommendedArticles(snapshot, ARTICLES, 4),
     [snapshot],
   )
 
+  // Filter the full article list by topic; show all if filter is 'all'
   const filtered =
     filter === 'all' ? ARTICLES : ARTICLES.filter((article) => article.topic === filter)
 
@@ -28,6 +35,7 @@ function ArticleHub() {
         </div>
       </div>
 
+      {/* Personalised recommendations panel — only shown when a snapshot exists */}
       {snapshot && (
         <div className="recommendation-panel">
           <div className="recommendation-eyebrow">Recommended for your score</div>
@@ -53,6 +61,7 @@ function ArticleHub() {
         </div>
       )}
 
+      {/* Topic filter buttons */}
       <div className="filter-row">
         {FILTERS.map((filterKey) => (
           <button
@@ -66,6 +75,7 @@ function ArticleHub() {
         ))}
       </div>
 
+      {/* Main article grid — each card opens the article modal on click */}
       <div className="articles-grid">
         {filtered.map((article) => (
           <button
@@ -91,8 +101,10 @@ function ArticleHub() {
         ))}
       </div>
 
+      {/* Article detail modal — clicking the overlay or the × button closes it */}
       {selected && (
         <div className="modal-overlay" onClick={() => setSelected(null)}>
+          {/* stopPropagation prevents clicks inside the box from closing the modal */}
           <div className="modal-box" onClick={(event) => event.stopPropagation()}>
             <div className={`modal-bar ${selected.topic}`}></div>
             <div className="modal-header">
@@ -115,6 +127,8 @@ function ArticleHub() {
                   <div className="modal-source-label">Source</div>
                   <div className="modal-source-name">{selected.source}</div>
                 </div>
+                {/* Opens the original article in a new tab.
+                    rel="noreferrer" prevents referrer leakage and tab-napping. */}
                 <a
                   className="modal-source-link"
                   href={selected.url}

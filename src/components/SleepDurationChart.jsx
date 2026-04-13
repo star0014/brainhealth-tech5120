@@ -1,6 +1,12 @@
+// Sleep Duration Chart component.
+// Renders an SVG line chart comparing how the 18-24 age group distributes sleep duration.
+// Supports three views: weeknight, weekend, and overall.
+// If the user's sleep band is provided, an orange marker is plotted on the chart.
 import { useMemo, useState } from 'react'
 import './Charts.css'
 
+// Population distribution data for each sleep view.
+// Each point contains a sleep duration band (hours) and its share of the 18-24 population (%).
 const SERIES = {
   weeknight: {
     label: 'Weeknight',
@@ -43,53 +49,51 @@ const SERIES = {
   },
 }
 
-const CHART_WIDTH = 640
+// SVG canvas dimensions and margins
+const CHART_WIDTH  = 640
 const CHART_HEIGHT = 320
 const MARGIN = { top: 20, right: 24, bottom: 52, left: 42 }
-const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right
-const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom
-const MAX_Y = 40
-const X_MIN = 5.5
-const X_MAX = 10.5
+const INNER_WIDTH  = CHART_WIDTH  - MARGIN.left - MARGIN.right
+const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top  - MARGIN.bottom
+const MAX_Y = 40   // y-axis cap at 40%
+const X_MIN = 5.5  // leftmost x value (hours)
+const X_MAX = 10.5 // rightmost x value (hours)
 
+// Maps a sleep duration (hours) to an SVG x pixel position
 function xScale(hours) {
   return MARGIN.left + ((hours - X_MIN) / (X_MAX - X_MIN)) * INNER_WIDTH
 }
 
+// Maps a percentage value to an SVG y pixel position (y increases downward in SVG)
 function yScale(value) {
   return MARGIN.top + INNER_HEIGHT - (value / MAX_Y) * INNER_HEIGHT
 }
 
+// Finds where to plot the user's marker on the chart.
+// Band code 5 ("9 hours or more") spans two chart points, so it uses a weighted average position.
 function getUserPlotPoint(series, userSleepBand) {
   if (!userSleepBand) return null
 
   if (userSleepBand.code === 5) {
     const nineToTen = series.points.find((point) => point.label === '9 hours')
-    const tenPlus = series.points.find((point) => point.label === '10+ hours')
+    const tenPlus   = series.points.find((point) => point.label === '10+ hours')
 
     if (!nineToTen || !tenPlus) return null
 
-    const combinedShare = nineToTen.value + tenPlus.value
-    const weightedHours =
+    const combinedShare  = nineToTen.value + tenPlus.value
+    const weightedHours  =
       (nineToTen.hours * nineToTen.value + tenPlus.hours * tenPlus.value) / combinedShare
 
-    return {
-      label: userSleepBand.label,
-      hours: weightedHours,
-      value: combinedShare,
-    }
+    return { label: userSleepBand.label, hours: weightedHours, value: combinedShare }
   }
 
   const match = series.points.find((point) => point.hours === userSleepBand.midpoint)
   if (!match) return null
 
-  return {
-    label: userSleepBand.label,
-    hours: match.hours,
-    value: match.value,
-  }
+  return { label: userSleepBand.label, hours: match.hours, value: match.value }
 }
 
+// Builds the SVG path string for the filled area under the line
 function getAreaPath(points) {
   const line = points.map((point, index) => {
     const command = index === 0 ? 'M' : 'L'
@@ -104,6 +108,7 @@ function getAreaPath(points) {
   ].join(' ')
 }
 
+// Builds the SVG path string for the line itself (no fill)
 function getLinePath(points) {
   return points
     .map((point, index) => {
@@ -113,19 +118,21 @@ function getLinePath(points) {
     .join(' ')
 }
 
+// userSleepBand — the band object for the user's Q1 answer (from Dashboard SLEEP_BANDS map)
 function SleepDurationChart({ userSleepBand }) {
-  const [activeSeries, setActiveSeries] = useState('overall')
-  const [hoveredPoint, setHoveredPoint] = useState(null)
-  const [showUserPopup, setShowUserPopup] = useState(false)
+  const [activeSeries, setActiveSeries] = useState('overall') // which dataset tab is shown
+  const [hoveredPoint, setHoveredPoint] = useState(null)      // point the mouse is over
+  const [showUserPopup, setShowUserPopup] = useState(false)   // whether the user marker popup is open
   const current = SERIES[activeSeries]
 
+  // Memoise paths so they're only recalculated when the series changes
   const areaPath = useMemo(() => getAreaPath(current.points), [current.points])
   const linePath = useMemo(() => getLinePath(current.points), [current.points])
-  const averageX = xScale(current.average)
+  const averageX     = xScale(current.average)
   const highestPoint = [...current.points].sort((left, right) => right.value - left.value)[0]
-  const userPoint = getUserPlotPoint(current, userSleepBand)
-  const userPointX = userPoint ? xScale(userPoint.hours) : null
-  const userPointY = userPoint ? yScale(userPoint.value) : null
+  const userPoint    = getUserPlotPoint(current, userSleepBand)
+  const userPointX   = userPoint ? xScale(userPoint.hours) : null
+  const userPointY   = userPoint ? yScale(userPoint.value) : null
 
   return (
     <div className="sleep-chart-card">

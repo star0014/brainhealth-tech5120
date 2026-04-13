@@ -1,8 +1,12 @@
+// Onboarding page — walks the user through a 4-question brain health questionnaire
+// and shows a score summary before redirecting to the Dashboard.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Onboarding.css'
 import { calculateSnapshotFromResponses } from '../utils/scoring'
 
+// The four questionnaire steps in display order.
+// Each step maps to a domain and contains a single multiple-choice question.
 const QUESTIONNAIRE_STEPS = [
   {
     key: 'sleep_rhythm',
@@ -66,39 +70,43 @@ const QUESTIONNAIRE_STEPS = [
   },
 ]
 
-const SCORE_RING_RADIUS = 50
+// Geometry for the animated SVG score ring on the result screen
+const SCORE_RING_RADIUS        = 50
 const SCORE_RING_CIRCUMFERENCE = 2 * Math.PI * SCORE_RING_RADIUS
 
+// Returns the colour tone and message for the result screen based on the overall score
 function getScoreTone(score) {
   if (score >= 75) {
     return {
-      tone: 'high',
-      kicker: 'Recovery-style snapshot',
+      tone:    'high',
+      kicker:  'Recovery-style snapshot',
       message: 'You are showing a strong base right now. Keep protecting the habits doing the heavy lifting.',
     }
   }
   if (score >= 50) {
     return {
-      tone: 'mid',
-      kicker: 'Recovery-style snapshot',
+      tone:    'mid',
+      kicker:  'Recovery-style snapshot',
       message: 'Your baseline is decent, but one or two habits are dragging the full picture down.',
     }
   }
   return {
-    tone: 'low',
-    kicker: 'Recovery-style snapshot',
+    tone:    'low',
+    kicker:  'Recovery-style snapshot',
     message: 'Your system looks under pressure right now. Start with the lowest-scoring area first.',
   }
 }
 
+// Splits domain scores into the top 2 (strengths) and bottom 2 (priorities) for the result screen
 function buildInsights(domainEntries) {
   const sorted = [...domainEntries].sort((a, b) => b.score - a.score)
   return {
-    strengths: sorted.slice(0, 2),
+    strengths:  sorted.slice(0, 2),
     priorities: sorted.slice(-2).reverse(),
   }
 }
 
+// Animates a number counting up from 0 to the target value using an ease-out curve
 function AnimatedScore({ value, duration = 1100 }) {
   const [displayValue, setDisplayValue] = useState(0)
 
@@ -108,7 +116,7 @@ function AnimatedScore({ value, duration = 1100 }) {
 
     const tick = (now) => {
       const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
+      const eased    = 1 - Math.pow(1 - progress, 3) // cubic ease-out
       setDisplayValue(Math.round(value * eased))
 
       if (progress < 1) {
@@ -123,54 +131,55 @@ function AnimatedScore({ value, duration = 1100 }) {
   return displayValue
 }
 
+// Assembles the snapshot object that gets saved to localStorage and passed to the Dashboard.
+// Returns null if scoring hasn't been computed yet (incomplete questionnaire).
 function createDashboardPayload(scoring, responses) {
   if (!scoring) return null
 
+  // Flatten domain scores into a flat responses map for Dashboard chart lookups
   const dashboardResponses = {
     Q1: scoring.normalizedResponses.Q1,
     Q2: scoring.normalizedResponses.Q2,
     Q3: scoring.normalizedResponses.Q3,
     Q4: scoring.normalizedResponses.Q4,
-    Q4_social: scoring.normalizedResponses.Q4,
+    Q4_social: scoring.normalizedResponses.Q4, // duplicate kept for legacy compatibility
   }
 
   return {
-    completedAt: new Date().toISOString(),
-    questionnaireVersion: 'iteration-1-final-4q',
-    responses: dashboardResponses,
-    questionnaireResponses: responses,
-    overallScore: scoring.overallScore,
-    overallInterpretation: scoring.overallInterpretation,
-    domainScores: scoring.domainScoresLegacy,
+    completedAt:              new Date().toISOString(),
+    questionnaireVersion:     'iteration-1-final-4q',
+    responses:                dashboardResponses,
+    questionnaireResponses:   responses,       // raw answers for re-scoring on Dashboard
+    overallScore:             scoring.overallScore,
+    overallInterpretation:    scoring.overallInterpretation,
+    domainScores:             scoring.domainScoresLegacy,
   }
 }
 
 function Onboarding() {
-  const navigate = useNavigate()
-  const [step, setStep] = useState(0)
-  const [responses, setResponses] = useState({})
-  const [showValidation, setShowValidation] = useState(false)
-  const totalSteps = QUESTIONNAIRE_STEPS.length + 1
+  const navigate  = useNavigate()
+  const [step, setStep]                     = useState(0)
+  const [responses, setResponses]           = useState({})       // stores { Q1: 3, Q2: 2, ... }
+  const [showValidation, setShowValidation] = useState(false)    // shows "please answer" prompt
+  const totalSteps  = QUESTIONNAIRE_STEPS.length + 1             // 4 questions + 1 result screen
 
-  const currentStep = QUESTIONNAIRE_STEPS[step]
-  const isResultStep = step === QUESTIONNAIRE_STEPS.length
+  const currentStep  = QUESTIONNAIRE_STEPS[step]
+  const isResultStep = step === QUESTIONNAIRE_STEPS.length       // true when all questions are done
 
+  // Records the user's answer for a given question and clears the validation warning
   const setAnswer = (questionId, value) => {
-    setResponses((current) => ({
-      ...current,
-      [questionId]: value,
-    }))
+    setResponses((current) => ({ ...current, [questionId]: value }))
     setShowValidation(false)
   }
 
+  // True if the current question has been answered (result screen is always "complete")
   const stepComplete = currentStep ? Boolean(responses[currentStep.question.id]) : true
 
   const nextStep = () => {
     if (!stepComplete) {
-      setShowValidation(true)
+      setShowValidation(true) // nudge the user to answer before proceeding
       return
     }
-
     if (step < QUESTIONNAIRE_STEPS.length) {
       setStep(step + 1)
       setShowValidation(false)
@@ -184,14 +193,17 @@ function Onboarding() {
     }
   }
 
-  const scoring = calculateSnapshotFromResponses(responses)
-  const domainScores = scoring?.domainScoresLatest ?? []
-  const overallScore = scoring?.overallScore ?? 0
+  // Recalculate the score every time responses change
+  const scoring        = calculateSnapshotFromResponses(responses)
+  const domainScores   = scoring?.domainScoresLatest ?? []
+  const overallScore   = scoring?.overallScore ?? 0
   const interpretation = scoring?.overallInterpretation ?? 'priority area for support'
-  const insights = buildInsights(domainScores)
+  const insights       = buildInsights(domainScores)
   const progressPercent = ((step + 1) / totalSteps) * 100
-  const scoreTone = getScoreTone(overallScore)
+  const scoreTone      = getScoreTone(overallScore)
 
+  // Called when the user clicks "Go to my dashboard" on the result screen.
+  // Saves the snapshot and navigates, passing state so the Dashboard renders immediately.
   const handleGoToDashboard = () => {
     const payload = createDashboardPayload(scoring, responses)
     if (!payload) return
@@ -200,6 +212,8 @@ function Onboarding() {
     navigate('/dashboard', { state: payload })
   }
 
+  // Also save to localStorage as soon as the result step renders,
+  // so the data is persisted even if the user refreshes before clicking the button.
   useEffect(() => {
     if (!isResultStep) return
 
