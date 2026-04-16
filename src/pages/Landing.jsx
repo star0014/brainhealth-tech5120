@@ -49,8 +49,8 @@ function Landing() {
         </div>
         <div className="landing-nav-links">
           <Link className="landing-nav-link" to="/onboarding">Take the quiz</Link>
-          <Link className="landing-nav-link" to="/dashboard">Dashboard</Link>
-          <Link className="landing-nav-link" to="/articles">Articles</Link>
+          {/* <Link className="landing-nav-link" to="/dashboard">Dashboard</Link>
+          <Link className="landing-nav-link" to="/articles">Articles</Link> */}
         </div>
       </nav>
 
@@ -72,9 +72,9 @@ function Landing() {
             <Link className="cta-primary" to="/onboarding">
               Start my snapshot →
             </Link>
-            <Link className="cta-ghost" to="/dashboard">
+            {/* <Link className="cta-ghost" to="/dashboard">
               View demo dashboard
-            </Link>
+            </Link> */}
           </div>
           <div className="hero-disclaimer">
             Free · No sign-up · Not a medical assessment
