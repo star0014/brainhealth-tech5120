@@ -146,6 +146,7 @@ function createDashboardPayload(scoring, responses) {
   }
 
   return {
+    onboardingCompleted:      true,
     completedAt:              new Date().toISOString(),
     questionnaireVersion:     'iteration-1-final-4q',
     responses:                dashboardResponses,

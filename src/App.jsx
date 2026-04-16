@@ -4,6 +4,18 @@ import Navbar from './components/Navbar'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import ArticleHub from './pages/ArticleHub'
+import { getSnapshot, hasCompletedOnboarding } from './utils/recommendations'
+
+function RequireCompletedOnboarding({ children }) {
+  const snapshot = getSnapshot()
+  const isCompleted = hasCompletedOnboarding(snapshot)
+
+  if (!isCompleted) {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  return children
+}
 
 function App() {
   return (
@@ -14,8 +26,22 @@ function App() {
         {/* Redirect the root path to the onboarding questionnaire */}
         <Route path="/" element={<Navigate to="/onboarding" />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/articles" element={<ArticleHub />} />
+        <Route
+          path="/dashboard"
+          element={(
+            <RequireCompletedOnboarding>
+              <Dashboard />
+            </RequireCompletedOnboarding>
+          )}
+        />
+        <Route
+          path="/articles"
+          element={(
+            <RequireCompletedOnboarding>
+              <ArticleHub />
+            </RequireCompletedOnboarding>
+          )}
+        />
       </Routes>
     </BrowserRouter>
   )

@@ -13,7 +13,6 @@ import { calculateSnapshotFromResponses } from '../utils/scoring'
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
-
 // Emoji icons displayed next to each domain score bar
 const DOMAIN_ICONS = {
   sleep_rhythm:     '🌙',
@@ -510,7 +509,6 @@ function Dashboard() {
     }
   }
 
-  // Prefer router state (just came from onboarding) then fall back to localStorage
   const baseSnapshot = location.state ?? parsedSnapshot
 
   const [dismissedWarnings, setDismissedWarnings] = useState([])  // keys of dismissed alert cards

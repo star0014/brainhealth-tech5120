@@ -1,4 +1,5 @@
 // Utilities for reading the saved snapshot and generating article recommendations.
+import { calculateSnapshotFromResponses } from './scoring'
 
 // Reads the questionnaire snapshot saved in localStorage after onboarding.
 // Returns null if nothing is saved or the stored value is not valid JSON.
@@ -11,6 +12,16 @@ export function getSnapshot() {
   } catch {
     return null
   }
+}
+
+// A user is considered "onboarding-complete" only if:
+// 1) the explicit completion flag is true, and
+// 2) the stored responses still produce a valid score shape.
+export function hasCompletedOnboarding(snapshot = getSnapshot()) {
+  if (!snapshot?.onboardingCompleted) return false
+
+  const scoringInput = snapshot.questionnaireResponses ?? snapshot.responses
+  return Boolean(calculateSnapshotFromResponses(scoringInput))
 }
 
 // Returns the keys of the lowest-scoring domains, sorted worst-first.
