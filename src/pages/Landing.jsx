@@ -116,7 +116,7 @@ function Landing() {
             </div>
             <div className="hero-pet-score">
               <span className="hero-pet-score-label">Overall score</span>
-              <span className="hero-pet-score-val">70<span>/100</span></span>
+              <span className="hero-pet-score-val"><span>/100</span></span>
             </div>
           </div>
         </div>
