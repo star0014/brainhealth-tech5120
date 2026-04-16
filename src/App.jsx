@@ -1,5 +1,6 @@
 // Root component. Sets up the router and defines all page routes.
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Landing from './pages/Landing'
 import Navbar from './components/Navbar'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
@@ -24,7 +25,7 @@ function App() {
       <Navbar />
       <Routes>
         {/* Redirect the root path to the onboarding questionnaire */}
-        <Route path="/" element={<Navigate to="/onboarding" />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route
           path="/dashboard"
