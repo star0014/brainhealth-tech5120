@@ -60,3 +60,25 @@
     color: white;
     cursor: pointer;
   }
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-home-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #64748b;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.navbar-home-btn:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}

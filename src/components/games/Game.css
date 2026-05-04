@@ -1,0 +1,304 @@
+.game-page { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; font-family: 'Inter', sans-serif; }
+
+.game-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+.game-back { background: none; border: 1.5px solid #e2e8f0; padding: 8px 16px; border-radius: 50px; font-size: 15px; font-weight: 500; color: #1e293b; cursor: pointer; transition: all 0.2s; }
+.game-back:hover { border-color: #2563eb; color: #2563eb; }
+.game-title-area { text-align: center; }
+.game-title-area h1 { font-size: 26px; font-weight: 700; color: #0d1b2a; margin-bottom: 4px; }
+.game-skill { font-size: 12px; color: #2563eb; font-weight: 600; background: #eff6ff; padding: 3px 10px; border-radius: 50px; }
+.game-rounds { font-size: 16px; font-weight: 600; color: #1e293b; background: #f1f5f9; padding: 8px 16px; border-radius: 50px; }
+
+.reaction-box { width: 100%; height: 380px; border-radius: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; user-select: none; }
+.reaction-box.waiting { background: #2563eb; }
+.reaction-box.ready { background: #dc2626; }
+.reaction-box.go { background: #16a34a; }
+.reaction-box.result { background: #2563eb; }
+.reaction-box.toosoon { background: #d97706; }
+
+.reaction-content { text-align: center; color: white; }
+.reaction-content p { font-size: 30px; font-weight: 700; margin: 16px 0 8px; }
+.reaction-content span { font-size: 16px; opacity: 0.95; }
+.reaction-go { font-size: 64px !important; font-weight: 800 !important; letter-spacing: -2px; }
+.reaction-time { font-size: 72px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+.reaction-time span { font-size: 24px; font-weight: 500; opacity: 0.8; }
+.reaction-dots { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+.reaction-dots span { width: 12px; height: 12px; background: white; border-radius: 50%; animation: bounce 0.8s ease-in-out infinite; }
+.reaction-dots span:nth-child(2) { animation-delay: 0.15s; }
+.reaction-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.reaction-results { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.reaction-results h2 { font-size: 30px; font-weight: 700; color: #0d1b2a; margin-bottom: 28px; }
+.result-avg { margin-bottom: 28px; }
+.result-avg-num { font-size: 64px; font-weight: 800; color: #0d1b2a; letter-spacing: -3px; line-height: 1; }
+.result-avg-num span { font-size: 22px; font-weight: 500; color: #64748b; }
+.result-avg-label { font-size: 15px; color: #1e293b; font-weight: 500; margin: 8px 0 6px; }
+.result-rating { font-size: 20px; font-weight: 700; }
+.result-rounds { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; text-align: left; background: #f8fafc; border-radius: 12px; padding: 16px 20px; }
+.result-round { display: flex; justify-content: space-between; font-size: 15px; color: #1e293b; font-weight: 500; }
+.result-actions { display: flex; gap: 12px; justify-content: center; }
+.game-back-btn { padding: 12px 28px; background: white; border: 1.5px solid #e2e8f0; border-radius: 50px; font-size: 15px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s; }
+.game-back-btn:hover { border-color: #2563eb; color: #2563eb; }
+.mg-play-btn { padding: 12px 28px; color: white; border: none; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+
+.memory-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; font-size: 16px; color: #1e293b; font-weight: 500; }
+.memory-stats strong { color: #0d1b2a; }
+.memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 440px; margin: 0 auto; }
+.memory-card { aspect-ratio: 1; cursor: pointer; perspective: 600px; }
+.memory-card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.4s; border-radius: 12px; }
+.memory-card.flipped .memory-card-inner { transform: rotateY(180deg); }
+.memory-card-front, .memory-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.memory-card-front { background: #2563eb; color: white; font-size: 22px; font-weight: 700; border: 2px solid #1d4ed8; }
+.memory-card-back { background: white; border: 2px solid #e2e8f0; transform: rotateY(180deg); }
+.memory-card.matched .memory-card-back { background: #f0fdf4; border-color: #bbf7d0; }
+.result-saved { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 20px; text-align: center; }
+.result-desc { font-size: 15px; color: #374151; margin-top: 6px; font-weight: 500; }
+
+/* ── Stroop redesign ───────────────────────────────────────────────────────── */
+.stroop-timer {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 1.5px solid;
+  transition: color 0.5s, border-color 0.5s, background 0.5s;
+}
+
+/* Intro card */
+.stroop-intro-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.stroop-intro-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 32px;
+}
+
+.stroop-demo-word {
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.stroop-demo-arrow {
+  font-size: 28px;
+  color: #94a3b8;
+}
+
+.stroop-demo-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stroop-demo-chip {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stroop-intro-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.stroop-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.stroop-rule-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+
+.stroop-start-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 24px rgba(245,158,11,0.3);
+}
+.stroop-start-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(245,158,11,0.4); }
+
+/* Playing state */
+.stroop-game { display: flex; flex-direction: column; gap: 20px; }
+
+.stroop-timer-track {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.stroop-timer-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1s linear, background 0.5s;
+}
+
+.stroop-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.stroop-stat-box {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+.stroop-stat-num { font-size: 26px; font-weight: 800; color: #0d1b2a; letter-spacing: -1px; }
+.stroop-stat-lbl { font-size: 12px; color: #94a3b8; margin-top: 2px; font-weight: 500; }
+
+.stroop-word-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 48px 32px;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.stroop-word-card.correct { border-color: #22c55e; background: #f0fdf4; }
+.stroop-word-card.wrong   { border-color: #ef4444; background: #fef2f2; }
+
+.stroop-word-prompt {
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stroop-word-display {
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: -3px;
+  line-height: 1;
+}
+
+.stroop-feedback-badge {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 50px;
+}
+.stroop-feedback-badge.correct { background: #dcfce7; color: #16a34a; }
+.stroop-feedback-badge.wrong   { background: #fee2e2; color: #dc2626; }
+
+.stroop-color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stroop-color-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 24px;
+  background: var(--btn-bg);
+  border: 2px solid var(--btn-color);
+  border-radius: 16px;
+  color: var(--btn-color);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.stroop-color-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  filter: brightness(0.96);
+}
+.stroop-color-btn:active { transform: scale(0.97); }
+
+.stroop-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Other games strip ───────────────────────────────────────────────────── */
+.other-games {
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.other-games-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #374151;
+  margin-bottom: 14px;
+}
+
+.other-games-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.other-game-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.other-game-btn:hover {
+  border-color: #bfdbfe;
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.other-game-name { font-size: 16px; font-weight: 700; color: #0d1b2a; }
+.other-game-sub  { font-size: 13px; color: #374151; font-weight: 500; }

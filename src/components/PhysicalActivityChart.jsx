@@ -189,7 +189,7 @@ function PhysicalActivityChart({ userActivityBand }) {
 
           {current.points.map((point, index) => (
             <g key={point.label} transform={`translate(${xScale(index, current.points.length)} ${MARGIN.top + INNER_HEIGHT + 24})`}>
-              <rect x="-34" y="-12" width="68" height="24" rx="12" className="sleep-axis-pill" />
+              <rect x="-38" y="-13" width="76" height="26" rx="13" className="sleep-axis-pill" />
               <text y="4" textAnchor="middle" className="sleep-axis-text">
                 {point.label}
               </text>

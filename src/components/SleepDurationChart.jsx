@@ -198,11 +198,11 @@ function SleepDurationChart({ userSleepBand }) {
           {current.points.map((point) => (
             <g key={`label-${point.hours}`} transform={`translate(${xScale(point.hours)} ${MARGIN.top + INNER_HEIGHT + 24})`}>
               <rect
-                x="-28"
-                y="-12"
-                width="56"
-                height="24"
-                rx="12"
+                x="-32"
+                y="-13"
+                width="64"
+                height="26"
+                rx="13"
                 className="sleep-axis-pill"
               />
               <text

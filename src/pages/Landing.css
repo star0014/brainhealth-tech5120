@@ -131,7 +131,7 @@
 
 .hero-sub {
   font-size: 1.05rem;
-  color: #4a5f7a;
+  color: #1e293b;
   line-height: 1.65;
   margin: 0 0 28px;
   max-width: 460px;
@@ -191,7 +191,7 @@
 
 .hero-disclaimer {
   font-size: 0.78rem;
-  color: #8aa0ba;
+  color: #374151;
 }
 
 /* ─── Brainy pet card ───────────────────────────────────────────────────────── */
@@ -243,7 +243,7 @@
 
 .hero-pet-speech {
   font-size: 0.82rem;
-  color: #4a5f7a;
+  color: #1e293b;
   background: #f4f8fc;
   border-radius: 12px;
   padding: 10px 14px;
@@ -260,7 +260,7 @@
 
 .hero-pet-score-label {
   font-size: 0.78rem;
-  color: #8aa0ba;
+  color: #374151;
 }
 
 .hero-pet-score-val {
@@ -272,7 +272,7 @@
 .hero-pet-score-val span {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #8aa0ba;
+  color: #374151;
 }
 
 /* ─── Shared section styles ─────────────────────────────────────────────────── */
@@ -336,7 +336,7 @@
 
 .step-sub {
   font-size: 0.82rem;
-  color: #6b84a0;
+  color: #374151;
   line-height: 1.5;
 }
 
@@ -386,7 +386,7 @@
 
 .domain-desc {
   font-size: 0.84rem;
-  color: #6b84a0;
+  color: #374151;
   line-height: 1.6;
 }
 
@@ -443,7 +443,7 @@
   flex-wrap: wrap;
   gap: 16px;
   font-size: 0.82rem;
-  color: #8aa0ba;
+  color: #374151;
 }
 
 .footer-logo {
