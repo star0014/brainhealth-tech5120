@@ -8,7 +8,8 @@ const app = express()
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://iteration2.ta31brainboost.me'
+    'https://iteration2.ta31brainboost.me',
+    'https://ta31brainboost.me'
   ]
 }))
 app.use(express.json())
