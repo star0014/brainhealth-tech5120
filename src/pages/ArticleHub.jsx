@@ -1,32 +1,46 @@
-// Article Hub page. Shows all articles with topic filters and a personalised
+// ─────────────────────────────────────────────────────────────────────────────
+// Article Hub page — shows all articles with topic filters and a personalised
 // recommendations panel based on the user's lowest-scoring domains.
+//
+// Layout:
+//   1. Page header (title + sub-copy)
+//   2. Recommendations panel — only rendered if a snapshot exists in localStorage.
+//      Shows up to 4 articles ordered by the user's weakest domains.
+//   3. Topic filter buttons — 'All' plus one button per domain.
+//   4. Article card grid — filtered by the selected topic.
+//   5. Article detail modal — appears when a card is clicked; closes on overlay click or ×.
+// ─────────────────────────────────────────────────────────────────────────────
 import { useMemo, useState } from 'react'
 import { ARTICLES, TOPIC_META } from '../data/articles'
 import { getRecommendedArticles, getSnapshot } from '../utils/recommendations'
 import './ArticleHub.css'
 
-// All valid filter options — 'all' shows every article
+// All valid filter options — 'all' shows every article.
+// The order here matches the order of filter buttons rendered in the UI.
 const FILTERS = ['all', 'sleep_rhythm', 'move_mode', 'cognitive_strain', 'social_energy']
 
 function ArticleHub() {
-  const [filter, setFilter] = useState('all')     // currently selected topic filter
-  const [selected, setSelected] = useState(null)  // article open in the modal (null = closed)
+  const [filter,   setFilter]   = useState('all')     // currently selected topic filter
+  const [selected, setSelected] = useState(null)      // article open in the modal (null = closed)
 
-  // Load the saved snapshot to personalise the recommendations panel
+  // Load the saved snapshot to personalise the recommendations panel.
+  // getSnapshot() reads from localStorage — safe to call on every render.
   const snapshot = getSnapshot()
 
-  // Only recompute recommended articles when the snapshot changes
+  // Only recompute recommended articles when the snapshot changes.
+  // useMemo prevents re-sorting the entire ARTICLES array on every keystroke or filter click.
   const recommendedArticles = useMemo(
     () => getRecommendedArticles(snapshot, ARTICLES, 4),
     [snapshot],
   )
 
-  // Filter the full article list by topic; show all if filter is 'all'
+  // Filter the full article list by topic; show all if filter is 'all'.
   const filtered =
     filter === 'all' ? ARTICLES : ARTICLES.filter((article) => article.topic === filter)
 
   return (
     <div className="hub-wrap">
+      {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="hub-header">
         <div className="hub-title">Article Hub</div>
         <div className="hub-sub">
@@ -35,7 +49,9 @@ function ArticleHub() {
         </div>
       </div>
 
-      {/* Personalised recommendations panel — only shown when a snapshot exists */}
+      {/* ── Personalised recommendations panel ─────────────────────────────── */}
+      {/* Only shown when a snapshot exists (i.e. the user has completed onboarding).
+          The panel lists up to 4 articles prioritised by the user's weakest domains. */}
       {snapshot && (
         <div className="recommendation-panel">
           <div className="recommendation-eyebrow">Recommended for your score</div>
@@ -43,6 +59,7 @@ function ArticleHub() {
             Based on your latest snapshot, these articles focus first on the lower-scoring areas most
             likely to affect study, energy, stress, and social wellbeing.
           </div>
+          {/* Pill-style buttons that open the article detail modal directly */}
           <div className="recommended-grid">
             {recommendedArticles.map((article) => (
               <button
@@ -51,6 +68,7 @@ function ArticleHub() {
                 className="recommended-pill"
                 onClick={() => setSelected(article)}
               >
+                {/* Coloured topic chip using the same CSS class as article cards */}
                 <span className={`recommended-topic ${article.topic}`}>
                   {TOPIC_META[article.topic].shortLabel}
                 </span>
@@ -61,7 +79,8 @@ function ArticleHub() {
         </div>
       )}
 
-      {/* Topic filter buttons */}
+      {/* ── Topic filter buttons ─────────────────────────────────────────────── */}
+      {/* 'active' class highlights the currently selected filter */}
       <div className="filter-row">
         {FILTERS.map((filterKey) => (
           <button
@@ -75,7 +94,9 @@ function ArticleHub() {
         ))}
       </div>
 
-      {/* Main article grid — each card opens the article modal on click */}
+      {/* ── Main article grid ────────────────────────────────────────────────── */}
+      {/* Each card opens the article modal on click.
+          The article.topic CSS class drives the colour-coded cover banner. */}
       <div className="articles-grid">
         {filtered.map((article) => (
           <button
@@ -90,6 +111,7 @@ function ArticleHub() {
             </div>
             <div className="article-body">
               <div className="article-meta">
+                {/* Source badge: CSS class (e.g. 'headspace', 'who') drives its colour */}
                 <span className={`source-badge ${article.sourceBadge}`}>{article.source}</span>
                 <span className="read-time">{article.readTime}</span>
               </div>
@@ -101,11 +123,14 @@ function ArticleHub() {
         ))}
       </div>
 
-      {/* Article detail modal — clicking the overlay or the × button closes it */}
+      {/* ── Article detail modal ─────────────────────────────────────────────── */}
+      {/* Clicking the semi-transparent overlay closes the modal.
+          Clicking inside the modal box does not close it (stopPropagation). */}
       {selected && (
         <div className="modal-overlay" onClick={() => setSelected(null)}>
-          {/* stopPropagation prevents clicks inside the box from closing the modal */}
+          {/* stopPropagation prevents clicks inside the box from bubbling to the overlay close handler */}
           <div className="modal-box" onClick={(event) => event.stopPropagation()}>
+            {/* Coloured top accent bar — colour is driven by the article's topic CSS class */}
             <div className={`modal-bar ${selected.topic}`}></div>
             <div className="modal-header">
               <div>
@@ -115,6 +140,7 @@ function ArticleHub() {
                 </div>
                 <div className="modal-title">{selected.title}</div>
               </div>
+              {/* × button in the top-right corner of the modal */}
               <button type="button" className="modal-close" onClick={() => setSelected(null)}>
                 x
               </button>

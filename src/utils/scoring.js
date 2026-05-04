@@ -1,3 +1,14 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Scoring utilities for the BrainBoost brain-health questionnaire.
+//
+// The app measures four domains. Each domain maps to one questionnaire question
+// (Q1–Q4) answered on a 1-5 scale. Domain scores are converted to 0-100.
+//
+// Two scoring paths exist:
+//   1. calculateSnapshotFromResponses — scores the initial 4-question onboarding quiz.
+//   2. calculateSnapshotFromCheckin   — scores a daily habit check-in (HabitTracker).
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Scoring utilities for the brain health questionnaire.
 // Converts raw Q1-Q4 responses (1-5 scale) into domain scores (0-100) and an overall score.
 
@@ -26,13 +37,16 @@ function reverseScore(value) {
 }
 
 // Converts a 1-5 answer into a 0-100 domain score (each point = 20).
+// If reverse=true, the value is flipped before scaling so that the
+// worst habit (e.g. maximum screen time) still maps to a low score.
 function calculateDomainScore(value, reverse = false) {
   const adjusted = reverse ? reverseScore(value) : value
   return adjusted * 20
 }
 
-// Validates that a response value is a finite number between 1 and 5.
-// Returns null if the value is missing or out of range.
+// Validates that a response value is a finite number between 1 and 5 (inclusive).
+// Returns null if the value is missing, non-numeric, or out of the expected range.
+// Protects calculateSnapshotFromResponses from stale or partially-saved data.
 function normalizeScore(value) {
   const numberValue = Number(value)
   if (!Number.isFinite(numberValue)) return null
@@ -40,7 +54,11 @@ function normalizeScore(value) {
   return numberValue
 }
 
-// Returns a text label describing the overall score tier.
+// ─────────────────────────────────────────────────────────────────────────────
+// interpretScore
+// ─────────────────────────────────────────────────────────────────────────────
+// Returns a human-readable label for the overall score tier.
+// Used in the Onboarding result card and the Dashboard pet speech bubble.
 export function interpretScore(score) {
   if (score >= 75) return 'strong current habits'
   if (score >= 50) return 'moderate, room to improve'
@@ -48,8 +66,21 @@ export function interpretScore(score) {
   return 'priority area for support'
 }
 
-// Main scoring function. Takes raw questionnaire responses and returns a full snapshot object.
+// ─────────────────────────────────────────────────────────────────────────────
+// calculateSnapshotFromResponses
+// ─────────────────────────────────────────────────────────────────────────────
+// Main scoring function for the onboarding questionnaire.
+// Takes raw questionnaire responses { Q1, Q2, Q3, Q4 } and returns a full snapshot object.
 // Returns null if any required response is missing or invalid.
+//
+// Return shape:
+//   {
+//     normalizedResponses: { Q1, Q2, Q3, Q4 },  // coerced 1-5 integers
+//     domainScoresLatest:  Array<{ key, label, score }>,  // using new domain keys
+//     domainScoresLegacy:  Array<{ key, label, score }>,  // using Dashboard-compatible keys
+//     overallScore:        number,  // 0-100 average of adjusted domain values
+//     overallInterpretation: string
+//   }
 export function calculateSnapshotFromResponses(responses) {
   if (!responses) return null
 
@@ -73,7 +104,8 @@ export function calculateSnapshotFromResponses(responses) {
     score: calculateDomainScore(normalizedResponses[config.questionId], config.reverse),
   }))
 
-  // Build adjusted raw values (post-reverse) to calculate the overall average
+  // Build adjusted raw values (post-reverse) to calculate the overall average.
+  // Each adjusted value is in the 1-5 range; scaling by 20 converts to 0-100.
   const adjustedScores = Object.values(DOMAIN_CONFIG).map((config) =>
     config.reverse
       ? reverseScore(normalizedResponses[config.questionId])
@@ -106,7 +138,9 @@ export function calculateSnapshotFromResponses(responses) {
 // Social energy is kept from onboarding (Q4) since check-in doesn't capture it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Maps sleep_hours string → score (0-100)
+// Maps sleep_hours string → score (0-100).
+// '8' hours maps to the highest score (100); shorter or longer sleep scores lower.
+// '9+' is slightly penalised (80) versus '8' because oversleeping can indicate disrupted rhythm.
 function scoreSleep(sleepHours) {
   const map = {
     '< 6': 20,
@@ -115,10 +149,11 @@ function scoreSleep(sleepHours) {
     '8':   100,
     '9+':  80,
   }
-  return map[sleepHours] ?? 50
+  return map[sleepHours] ?? 50  // fallback 50 if an unexpected value is received
 }
 
-// Maps screen_time string → score (reverse: more screen = lower score)
+// Maps screen_time string → score (reverse: more screen = lower score).
+// '< 2h' is the healthiest band (100); '8h+' is the worst (20).
 function scoreScreen(screenTime) {
   const map = {
     '< 2h':  100,
@@ -130,13 +165,24 @@ function scoreScreen(screenTime) {
   return map[screenTime] ?? 50
 }
 
-// Maps physical_activity boolean → score
+// Maps physical_activity boolean → score.
+// Active = 100; no activity = 40 (not 0, because rest days are sometimes necessary).
 function scoreActivity(physicalActivity) {
   return physicalActivity ? 100 : 40
 }
 
-// Main function: takes today's check-in habit object + social score from onboarding
-// Returns a snapshot-shaped object compatible with the Dashboard component
+// ─────────────────────────────────────────────────────────────────────────────
+// calculateSnapshotFromCheckin
+// ─────────────────────────────────────────────────────────────────────────────
+// Main function: takes today's check-in habit object + social score from onboarding.
+// Returns a snapshot-shaped object compatible with the Dashboard component.
+//
+// Parameters:
+//   habit       — { sleep_hours, screen_time, physical_activity } from HabitTracker
+//   socialScore — the social_energy score from onboarding (carried forward, default 60)
+//
+// The social domain is intentionally excluded from daily check-ins because
+// social connection quality is harder to capture in a single daily question.
 export function calculateSnapshotFromCheckin(habit, socialScore = 60) {
   if (!habit) return null
 
@@ -144,6 +190,7 @@ export function calculateSnapshotFromCheckin(habit, socialScore = 60) {
   const screenScore   = scoreScreen(habit.screen_time)
   const activityScore = scoreActivity(habit.physical_activity)
 
+  // Assemble domain scores in the legacy key format expected by Dashboard.
   const domainScores = [
     { key: 'sleep_rhythm',    label: 'Sleep Rhythm',    score: sleepScore },
     { key: 'move_mode',       label: 'Move Mode',       score: activityScore },
@@ -151,6 +198,7 @@ export function calculateSnapshotFromCheckin(habit, socialScore = 60) {
     { key: 'social_energy',   label: 'Social Energy',   score: socialScore },
   ]
 
+  // Overall score = simple average of the four domain scores.
   const overallScore = Math.round(
     domainScores.reduce((sum, d) => sum + d.score, 0) / domainScores.length
   )
