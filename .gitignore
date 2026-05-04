@@ -2,9 +2,6 @@
 .env
 .env.*
 
-# Local tool settings
-.claude/
-
 # Logs
 logs
 *.log
