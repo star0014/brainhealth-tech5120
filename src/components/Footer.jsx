@@ -9,7 +9,7 @@ function Footer() {
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
-        <div className="app-footer-logo">Brain<span>Boost</span></div>
+        <div className="app-footer-logo">Cogni<span>Compass</span></div>
         <p className="app-footer-trust">
           CogniCompass only uses your responses to personalise insights, habit tracking, progress, and recommendations. We do not sell user data or use it for advertising.
         </p>

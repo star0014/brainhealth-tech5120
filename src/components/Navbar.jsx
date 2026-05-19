@@ -35,7 +35,7 @@ function Navbar() {
       {/* Left side: brand logo and home icon button */}
       <div className="navbar-left">
         {/* CogniCompass brand name — clicking takes the user back to the marketing home page */}
-        <Link to="/" className="navbar-logo">Brain<span>Boost</span></Link>
+        <Link to="/" className="navbar-logo">Cogni<span>Compass</span></Link>
         {/* Home icon button — an alternative shortcut to the home page */}
         <Link to="/" className="navbar-home-btn" title="Back to Home">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

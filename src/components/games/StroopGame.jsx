@@ -159,7 +159,7 @@ function StroopGame({ onBack, onSwitchGame }) {
         body: JSON.stringify({
           game_id: 'stroop',
           display_name: getDisplayName(user?.id, user?.firstName),
-          score,  // correct answers count (raw); accuracy % is in metadata
+          score: total > 0 ? Math.round((score / total) * 100) : 0,  // accuracy % as primary score
           metadata: {
             total_rounds: total,
             accuracy: total > 0 ? Math.round((score / total) * 100) : 0

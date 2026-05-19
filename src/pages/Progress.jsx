@@ -119,6 +119,17 @@ function Progress() {
 
       // Persist the new total so next visit can detect further unlocks.
       localStorage.setItem('bb_total_checkins', computedTotal)
+
+      // Fetch guest game scores using X-Guest-ID header
+      const guestId = localStorage.getItem('bb_guest_id')
+      if (guestId) {
+        try {
+          const gamesRes = await fetch(`${API}/games`, { headers: { 'X-Guest-ID': guestId } })
+          const gamesData = await gamesRes.json()
+          if (Array.isArray(gamesData)) setGameScores(gamesData)
+        } catch { /* silently fail */ }
+      }
+
       setLoading(false)
       return
     }

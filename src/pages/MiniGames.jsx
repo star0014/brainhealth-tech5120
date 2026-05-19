@@ -165,8 +165,12 @@ function MiniGames() {
     async function load() {
       try {
         const token = await getToken()
-        if (!token) return // guest users don't save scores to API — achievements stay locked
-        const res = await fetch(`${API}/games`, { headers: { Authorization: `Bearer ${token}` } })
+        const guestId = !token ? localStorage.getItem('bb_guest_id') : null
+        if (!token && !guestId) return
+        const headers = token
+          ? { Authorization: `Bearer ${token}` }
+          : { 'X-Guest-ID': guestId }
+        const res = await fetch(`${API}/games`, { headers })
         const data = await res.json()
         if (Array.isArray(data)) setGameScores(data)
       } catch { /* silently fail */ }

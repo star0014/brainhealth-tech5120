@@ -23,6 +23,7 @@ import HabitTracker from './pages/HabitTracker'
 import Progress from './pages/Progress'
 import MiniGames from './pages/MiniGames'
 import { getSnapshot, hasCompletedOnboarding } from './utils/recommendations'
+import Footer from './components/Footer'
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
 
@@ -186,16 +187,16 @@ export default function App() {
         <Route path="/dashboard" element={<><RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><Dashboard /></RequireCompletedOnboarding></RequireAuth></>} />
 
         {/* /habits : daily check-in and habit history */}
-        <Route path="/habits"    element={<RequireAuth><Navbar /><GuestBanner /><HabitTracker /></RequireAuth>} />
+        <Route path="/habits"    element={<><RequireAuth><Navbar /><GuestBanner /><HabitTracker /></RequireAuth><Footer /></>} />
 
         {/* /progress : streak, milestones, and game history */}
-        <Route path="/progress"  element={<RequireAuth><Navbar /><GuestBanner /><Progress /></RequireAuth>} />
+        <Route path="/progress"  element={<><RequireAuth><Navbar /><GuestBanner /><Progress /></RequireAuth><Footer /></>} />
 
         {/* /games : mini games hub — open to all (no RequireAuth) */}
-        <Route path="/games"     element={<><Navbar /><GuestBanner /><MiniGames /></>} />
+        <Route path="/games"     element={<><Navbar /><GuestBanner /><MiniGames /><Footer /></>} />
 
         {/* /articles : article hub — requires completed onboarding for personalised picks */}
-        <Route path="/articles"  element={<RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><ArticleHub /></RequireCompletedOnboarding></RequireAuth>} />
+        <Route path="/articles"  element={<><RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><ArticleHub /></RequireCompletedOnboarding></RequireAuth><Footer /></>} />
       </Routes>
     </BrowserRouter>
   )

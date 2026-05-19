@@ -191,7 +191,7 @@ export default function Home() {
 
       {/* Nav */}
       <nav className="home-nav">
-        <div className="home-logo">Brain<span>Boost</span></div>
+        <div className="home-logo">Cogni<span>Compass</span></div>
         <div className="home-nav-links">
           <SignedOut>
             <SignInButton mode="modal"><button className="nav-link-btn">Sign In</button></SignInButton>
@@ -377,7 +377,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="home-footer">
-        <div className="home-logo">Brain<span>Boost</span></div>
+        <div className="home-logo">Cogni<span>Compass</span></div>
         <p className="home-trust-note">
           CogniCompass only uses your responses to personalise insights, habit tracking, progress, and recommendations. We do not sell user data or use it for advertising.
         </p>
