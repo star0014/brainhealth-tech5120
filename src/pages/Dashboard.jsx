@@ -50,7 +50,7 @@ const SLEEP_BANDS = {
   2: { code: 2, label: '6 to less than 7 hours',   midpoint: 6.5, share: 18.0 },
   3: { code: 3, label: '7 to less than 8 hours',   midpoint: 7.5, share: 31.0 },
   4: { code: 4, label: '8 to less than 9 hours',   midpoint: 8.5, share: 35.8 },
-  5: { code: 5, label: '9 hours or more',           midpoint: 9.6, share: 5.6  },
+  5: { code: 5, label: '10+ hours',                 midpoint: 10.5, share: 0.5  },
 }
 
 // Maps Q2 answer codes (1-5) to an activity band object used by PhysicalActivityChart.
@@ -688,7 +688,7 @@ function Dashboard() {
       {/* Animated particle canvas rendered behind all content */}
       <NeuralBackground />
 
-      {/* ── Check-in prompt modal ──────────────────────────────────────────── */}
+      {/* Check-in prompt modal */}
       {/* Shown after the checkin fetch completes when no today entry exists.
           Clicking the overlay backdrop closes the modal (use last score). */}
       {showCheckinPrompt && checkinLoaded && (
@@ -712,7 +712,7 @@ function Dashboard() {
         </div>
       )}
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="dash-header">
         <div>
           <div className="dash-greeting">Your latest check-in</div>
@@ -721,7 +721,7 @@ function Dashboard() {
         <div className="dash-date">{today}</div>
       </div>
 
-      {/* ── Pet + Vitals section (side by side) ─────────────────────────────── */}
+      {/* Pet + Vitals section (side by side) */}
       <div className="pet-section">
         {/* Left column: pet SVG and poke button */}
         <div className="pet-left">
@@ -787,7 +787,32 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* ── Biggest shifts + What stands out (side by side) ────────────────── */}
+
+      {/* Habit Tracker + Progress nudges */}
+      <div className="dash-nudge-row">
+        <Link to="/habits" className="dash-games-nudge">
+          <div className="dash-games-nudge-left">
+            <span className="dash-games-nudge-emoji">📋</span>
+            <div>
+              <div className="dash-games-nudge-title">Log today's habits</div>
+              <div className="dash-games-nudge-sub">Track your sleep, screen time and activity to keep Brainy healthy</div>
+            </div>
+          </div>
+          <span className="dash-games-nudge-btn">Check in →</span>
+        </Link>
+        <Link to="/progress" className="dash-games-nudge">
+          <div className="dash-games-nudge-left">
+            <span className="dash-games-nudge-emoji">📈</span>
+            <div>
+              <div className="dash-games-nudge-title">See your progress</div>
+              <div className="dash-games-nudge-sub">Streaks, milestones and game achievements all in one place</div>
+            </div>
+          </div>
+          <span className="dash-games-nudge-btn">View →</span>
+        </Link>
+      </div>
+
+      {/* Biggest shifts + What stands out */}
       <div className="shifts-standout-row">
 
         {/* Left column: priority toast cards (dismissable) */}
@@ -941,7 +966,19 @@ function Dashboard() {
 
       </div>
 
-      {/* ── 30-second insights ──────────────────────────────────────────────── */}
+      {/* Games nudge — between Biggest Shifts and CogniCompasss */}
+      <Link to="/games" className="dash-games-nudge">
+        <div className="dash-games-nudge-left">
+          <span className="dash-games-nudge-emoji">🎮</span>
+          <div>
+            <div className="dash-games-nudge-title">Take the edge off — play a mini game</div>
+            <div className="dash-games-nudge-sub">Quick brain exercises to sharpen your focus and reaction speed</div>
+          </div>
+        </div>
+        <span className="dash-games-nudge-btn">Play now →</span>
+      </Link>
+
+      {/* 30-second insights */}
       <div className="section-heading insight-heading">Brain boosts to try now</div>
       <div className="insights-subhead">Picked from your lowest scores.</div>
       <div className="insights-grid">
@@ -983,13 +1020,28 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* ── Charts ──────────────────────────────────────────────────────────── */}
+
+      {/* Games nudge */}
+      <Link to="/articles" className="dash-games-nudge">
+        <div className="dash-games-nudge-left">
+          <span className="dash-games-nudge-emoji">📚</span>
+          <div>
+            <div className="dash-games-nudge-title">Explore the Article Hub</div>
+            <div className="dash-games-nudge-sub">Smart reads picked for your lowest-scoring areas — go deeper on what matters</div>
+          </div>
+        </div>
+        <span className="dash-games-nudge-btn">Read now →</span>
+      </Link>
+
+      {/* Charts */}
       {/* Population benchmark charts let the user see where they sit among 18-24 year olds */}
       <div className="section-heading">Sleep decoded</div>
       <SleepDurationChart userSleepBand={selectedSleepBand} />
 
       <div className="section-heading">Movement decoded</div>
       <PhysicalActivityChart userActivityBand={selectedActivityBand} />
+
+
     </div>
   )
 }

@@ -140,14 +140,15 @@ export function calculateSnapshotFromResponses(responses) {
 
 // Maps sleep_hours string → score (0-100).
 // '8' hours maps to the highest score (100); shorter or longer sleep scores lower.
-// '9+' is slightly penalised (80) versus '8' because oversleeping can indicate disrupted rhythm.
+// '10+' is slightly penalised (80) versus '8' because oversleeping can indicate disrupted rhythm.
 function scoreSleep(sleepHours) {
   const map = {
     '< 6': 20,
     '6':   40,
     '7':   60,
     '8':   100,
-    '9+':  80,
+    '9+':  80, // legacy saved value
+    '10+': 80,
   }
   return map[sleepHours] ?? 50  // fallback 50 if an unexpected value is received
 }

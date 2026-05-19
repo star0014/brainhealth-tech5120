@@ -1,0 +1,119 @@
+[
+  {
+    "id": 19,
+    "user_id": "user_3DFyAXPVN4ogdCfFOVIuSo9Hwvw",
+    "game_id": "memory",
+    "score": 15,
+    "metadata": {
+      "time_seconds": 29
+    },
+    "played_at": "2026-05-13T18:44:15.289Z",
+    "display_name": "Sameer #3546"
+  },
+  {
+    "id": 20,
+    "user_id": "user_3CmCwg4toIjg6RAqgYqyk3dxO2l",
+    "game_id": "reaction",
+    "score": 291,
+    "metadata": {
+      "rounds": [
+        303,
+        301,
+        282,
+        268,
+        301
+      ]
+    },
+    "played_at": "2026-05-13T23:38:08.971Z",
+    "display_name": "Yuhan #9240"
+  },
+  {
+    "id": 21,
+    "user_id": "user_3CmCwg4toIjg6RAqgYqyk3dxO2l",
+    "game_id": "memory",
+    "score": 26,
+    "metadata": {
+      "time_seconds": 48
+    },
+    "played_at": "2026-05-14T01:39:52.424Z",
+    "display_name": "Yuhan #9240"
+  },
+  {
+    "id": 22,
+    "user_id": "user_3CmCwg4toIjg6RAqgYqyk3dxO2l",
+    "game_id": "memory",
+    "score": 21,
+    "metadata": {
+      "time_seconds": 40
+    },
+    "played_at": "2026-05-14T01:41:21.543Z",
+    "display_name": "Yuhan #9240"
+  },
+  {
+    "id": 23,
+    "user_id": "user_3CmCwg4toIjg6RAqgYqyk3dxO2l",
+    "game_id": "reaction",
+    "score": 333,
+    "metadata": {
+      "rounds": [
+        268,
+        288,
+        449,
+        314,
+        348
+      ]
+    },
+    "played_at": "2026-05-14T03:01:30.014Z",
+    "display_name": "Yuhan #9240"
+  },
+  {
+    "id": 24,
+    "user_id": "user_3CmCwg4toIjg6RAqgYqyk3dxO2l",
+    "game_id": "reaction",
+    "score": 307,
+    "metadata": {
+      "rounds": [
+        360,
+        324,
+        282,
+        276,
+        294
+      ]
+    },
+    "played_at": "2026-05-14T22:26:35.195Z",
+    "display_name": "Yuhan #7119"
+  },
+  {
+    "id": 25,
+    "user_id": "user_3DFyAXPVN4ogdCfFOVIuSo9Hwvw",
+    "game_id": "memory",
+    "score": 22,
+    "metadata": {
+      "time_seconds": 65
+    },
+    "played_at": "2026-05-14T23:16:33.528Z",
+    "display_name": "Sameer #1536"
+  },
+  {
+    "id": 26,
+    "user_id": "user_3DFyAXPVN4ogdCfFOVIuSo9Hwvw",
+    "game_id": "visual_pattern",
+    "score": 5,
+    "metadata": {
+      "max_level": 5
+    },
+    "played_at": "2026-05-14T23:17:59.856Z",
+    "display_name": "Sameer #1536"
+  },
+  {
+    "id": 27,
+    "user_id": "user_3CmTilPseNjVJ5R8LdH4fBAbriL",
+    "game_id": "visual_pattern",
+    "score": 6,
+    "metadata": {
+      "max_level": 6
+    },
+    "played_at": "2026-05-15T00:13:57.042Z",
+    "display_name": "Shivani #6080"
+  }
+]

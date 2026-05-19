@@ -16,8 +16,9 @@
 //            or one of the "Try more games" shortcuts.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from 'react'
-import { useAuth } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import './Game.css'
+import { getDisplayName } from '../../utils/displayName'
 
 const API = import.meta.env.VITE_API_URL || 'https://brainhealth-iteration2-production.up.railway.app/api'
 
@@ -34,15 +35,59 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 const OtherGames = ({ onBack }) => (
   <div className="other-games">
     <div className="other-games-label">Try more games</div>
+
     <div className="other-games-row">
-      <button className="other-game-btn" onClick={onBack}>
-        <span className="other-game-name">Reaction Test</span>
-        <span className="other-game-sub">Processing Speed</span>
+
+      {/* Reaction Test */}
+      <button className="other-game-card" onClick={onBack}>
+        <div
+          className="other-game-card-icon"
+          style={{
+            background: '#2563eb15',
+            border: '1px solid #2563eb30'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+
+        <div className="other-game-card-info">
+          <div className="other-game-card-name">Reaction Test</div>
+          <div className="other-game-card-skill" style={{ color: '#2563eb' }}>
+            Processing Speed
+          </div>
+        </div>
+
+        <div className="other-game-card-arrow">→</div>
       </button>
-      <button className="other-game-btn" onClick={onBack}>
-        <span className="other-game-name">Stroop Test</span>
-        <span className="other-game-sub">Attention Control</span>
+
+      {/* Stroop Test */}
+      <button className="other-game-card" onClick={onBack}>
+        <div
+          className="other-game-card-icon"
+          style={{
+            background: '#f59e0b15',
+            border: '1px solid #f59e0b30'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+
+        <div className="other-game-card-info">
+          <div className="other-game-card-name">Stroop Test</div>
+          <div className="other-game-card-skill" style={{ color: '#f59e0b' }}>
+            Attention Control
+          </div>
+        </div>
+
+        <div className="other-game-card-arrow">→</div>
       </button>
+
     </div>
   </div>
 )
@@ -55,22 +100,28 @@ function createCards() {
 
 function MemoryGame({ onBack }) {
   const { getToken } = useAuth()
+  const { user } = useUser()
 
   const [cards,     setCards]     = useState(createCards())  // all 16 card objects
+  const [phase, setPhase] = useState('intro')
   const [selected,  setSelected]  = useState([])             // 0 or 1 cards currently flipped by the player
   const [moves,     setMoves]     = useState(0)              // total flip attempts (the score)
   const [done,      setDone]      = useState(false)          // true when all pairs are matched
-  const [startTime] = useState(Date.now())                   // timestamp at game start (not reactive)
+  const [startTime, setStartTime] = useState(null)
   const [elapsed,   setElapsed]   = useState(0)              // seconds since start (for the timer display)
   const [locked,    setLocked]    = useState(false)          // blocks clicks while a non-match is animating
   const [saved,     setSaved]     = useState(false)          // true after score is successfully submitted
 
   // Increment elapsed every second until the game is done.
   useEffect(() => {
-    if (done) return
-    const interval = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000)
-    return () => clearInterval(interval)  // clear on unmount or when done changes
-  }, [done])
+    if (done || phase !== 'playing') return
+
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000))
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [done, phase])
 
   // When all cards are matched, set done=true and save the score.
   useEffect(() => {
@@ -86,14 +137,19 @@ function MemoryGame({ onBack }) {
   async function saveScore() {
     try {
       const token = await getToken()
-      if (!token) return  // guest users — no token, skip saving
+      const guestId = !token ? localStorage.getItem('bb_guest_id') : null
+      if (!token && !guestId) return
+      const headers = token
+        ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        : { 'X-Guest-ID': guestId, 'Content-Type': 'application/json' }
       const finalMoves = moves
       const finalTime  = Math.floor((Date.now() - startTime) / 1000)
       await fetch(`${API}/games`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           game_id: 'memory',
+          display_name: getDisplayName(user?.id, user?.firstName),
           score: finalMoves,
           metadata: { time_seconds: finalTime }
         })
@@ -177,8 +233,119 @@ function MemoryGame({ onBack }) {
         <div className="game-rounds">{formatTime(elapsed)}</div>
       </div>
 
-      {/* ── Playing state ────────────────────────────────────────────────────── */}
-      {!done ? (
+      {/* ── Intro Screen ───────────────────────────────────────────────────── */}
+      {phase === 'intro' ? (
+
+        <div className="stroop-intro-card">
+
+          <div className="stroop-intro-demo">
+
+            <div style={{ display: 'flex', gap: 14 }}>
+
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 16,
+                  background: '#7c3aed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 34,
+                  color: 'white',
+                  boxShadow: '0 8px 24px rgba(124,58,237,0.3)'
+                }}
+              >
+                🧠
+              </div>
+
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 16,
+                  background: '#7c3aed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 34,
+                  color: 'white',
+                  boxShadow: '0 8px 24px rgba(124,58,237,0.3)'
+                }}
+              >
+                🧠
+              </div>
+
+            </div>
+
+            <div className="stroop-demo-arrow">→</div>
+
+            <div className="stroop-demo-answer">
+              <span>Find</span>
+
+              <div
+                className="stroop-demo-chip"
+                style={{
+                  background: '#f3e8ff',
+                  color: '#7c3aed',
+                  border: '2px solid #7c3aed'
+                }}
+              >
+                Matching Pairs
+              </div>
+            </div>
+
+          </div>
+
+          <div className="stroop-intro-rules">
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">🧠</span>
+              <span>
+                Flip cards to reveal hidden symbols
+              </span>
+            </div>
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">🎯</span>
+              <span>
+                Find all the <strong>matching pairs</strong>
+              </span>
+            </div>
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">⚡</span>
+              <span>
+                Finish in as <strong>few moves</strong> as possible
+              </span>
+            </div>
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">⏱</span>
+              <span>
+                Your moves and completion time are tracked
+              </span>
+            </div>
+
+          </div>
+
+          <button
+            className="stroop-start-btn"
+            style={{
+              background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+              boxShadow: '0 8px 24px rgba(124,58,237,0.35)'
+            }}
+            onClick={() => {
+              setStartTime(Date.now())
+              setPhase('playing')
+            }}
+          >
+            Start Game →
+          </button>
+
+        </div>
+
+      ) : !done ? (
         <>
           {/* Move and match counters above the grid */}
           <div className="memory-stats">

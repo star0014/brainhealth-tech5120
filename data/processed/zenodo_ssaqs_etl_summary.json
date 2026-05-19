@@ -1,0 +1,27 @@
+{
+  "source": "Zenodo record 18706837 - SSAQS dataset",
+  "participants_found": 35,
+  "daily_rows_written": 3616,
+  "output_csv": "data\\processed\\zenodo_ssaqs_daily_brainboost.csv",
+  "columns": [
+    "userid",
+    "university",
+    "course",
+    "date",
+    "sleep_overall_score",
+    "deep_sleep_minutes",
+    "steps_total",
+    "active_minutes",
+    "sedentary_minutes",
+    "activity_records",
+    "avg_hrv_rmssd",
+    "avg_oxygen",
+    "fitbit_stress_score",
+    "self_report_stress",
+    "self_report_anxiety",
+    "brainboost_sleep_hours_band",
+    "brainboost_screen_time_proxy",
+    "brainboost_physical_activity",
+    "smart_reminder_candidate"
+  ]
+}

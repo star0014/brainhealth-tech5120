@@ -50,9 +50,9 @@ const SERIES = {
 }
 
 // SVG canvas dimensions and margins
-const CHART_WIDTH  = 640
-const CHART_HEIGHT = 320
-const MARGIN = { top: 20, right: 24, bottom: 52, left: 42 }
+const CHART_WIDTH  = 820
+const CHART_HEIGHT = 360
+const MARGIN = { top: 24, right: 64, bottom: 82, left: 72 }
 const INNER_WIDTH  = CHART_WIDTH  - MARGIN.left - MARGIN.right
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top  - MARGIN.bottom
 const MAX_Y = 40   // y-axis cap at 40%
@@ -69,22 +69,22 @@ function yScale(value) {
   return MARGIN.top + INNER_HEIGHT - (value / MAX_Y) * INNER_HEIGHT
 }
 
+// Keeps long x-axis labels inside their pill and away from chart edges.
+function getAxisPillWidth(label) {
+  return Math.max(86, label.length * 7.5 + 26)
+}
+
 // Finds where to plot the user's marker on the chart.
-// Band code 5 ("9 hours or more") spans two chart points, so it uses a weighted average position.
+// Band code 5 is treated as the chart's "10+ hours" bucket.
 function getUserPlotPoint(series, userSleepBand) {
   if (!userSleepBand) return null
 
   if (userSleepBand.code === 5) {
-    const nineToTen = series.points.find((point) => point.label === '9 hours')
     const tenPlus   = series.points.find((point) => point.label === '10+ hours')
 
-    if (!nineToTen || !tenPlus) return null
+    if (!tenPlus) return null
 
-    const combinedShare  = nineToTen.value + tenPlus.value
-    const weightedHours  =
-      (nineToTen.hours * nineToTen.value + tenPlus.hours * tenPlus.value) / combinedShare
-
-    return { label: userSleepBand.label, hours: weightedHours, value: combinedShare }
+    return { label: '10+ hours', fullLabel: tenPlus.fullLabel, hours: tenPlus.hours, value: tenPlus.value }
   }
 
   const match = series.points.find((point) => point.hours === userSleepBand.midpoint)
@@ -134,6 +134,12 @@ function SleepDurationChart({ userSleepBand }) {
   const userPointX   = userPoint ? xScale(userPoint.hours) : null
   const userPointY   = userPoint ? yScale(userPoint.value) : null
 
+  function showPointTooltip(point, event) {
+    event.stopPropagation()
+    setHoveredPoint(point)
+    setShowUserPopup(false)
+  }
+
   return (
     <div className="sleep-chart-card">
       <div className="sleep-chart-top">
@@ -171,7 +177,7 @@ function SleepDurationChart({ userSleepBand }) {
           </div>
         </div>
 
-      <div className="sleep-chart-shell">
+      <div className="sleep-chart-shell" onClick={() => setHoveredPoint(null)}>
         <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="sleep-chart-svg" role="img">
           <defs>
             <linearGradient id="sleep-area-gradient" x1="0" x2="0" y1="0" y2="1">
@@ -195,14 +201,16 @@ function SleepDurationChart({ userSleepBand }) {
             </g>
           ))}
 
-          {current.points.map((point) => (
-            <g key={`label-${point.hours}`} transform={`translate(${xScale(point.hours)} ${MARGIN.top + INNER_HEIGHT + 24})`}>
+          {current.points.map((point) => {
+            const pillWidth = getAxisPillWidth(point.label)
+            return (
+            <g key={`label-${point.hours}`} transform={`translate(${xScale(point.hours)} ${MARGIN.top + INNER_HEIGHT + 30})`}>
               <rect
-                x="-32"
-                y="-13"
-                width="64"
-                height="26"
-                rx="13"
+                x={-pillWidth / 2}
+                y="-15"
+                width={pillWidth}
+                height="30"
+                rx="15"
                 className="sleep-axis-pill"
               />
               <text
@@ -213,7 +221,8 @@ function SleepDurationChart({ userSleepBand }) {
                 {point.label}
               </text>
             </g>
-          ))}
+            )
+          })}
 
           <line
             x1={averageX}
@@ -237,6 +246,8 @@ function SleepDurationChart({ userSleepBand }) {
                 key={point.hours}
                 onMouseEnter={() => setHoveredPoint(point)}
                 onMouseLeave={() => setHoveredPoint(null)}
+                onClick={(event) => showPointTooltip(point, event)}
+                onTouchStart={(event) => showPointTooltip(point, event)}
               >
                 <circle
                   cx={xScale(point.hours)}
@@ -249,8 +260,8 @@ function SleepDurationChart({ userSleepBand }) {
                 <circle
                   cx={xScale(point.hours)}
                   cy={yScale(point.value)}
-                  r="16"
-                  fill="transparent"
+                  r="24"
+                  className="chart-touch-target"
                 />
               </g>
             )
@@ -259,18 +270,38 @@ function SleepDurationChart({ userSleepBand }) {
           {userPoint && (
             <g
               className="sleep-user-marker-group"
-              onClick={() => setShowUserPopup((currentValue) => !currentValue)}
+              onMouseEnter={() => {
+                setHoveredPoint(null)
+                setShowUserPopup(true)
+              }}
+              onMouseLeave={() => setShowUserPopup(false)}
+              onClick={(event) => {
+                event.stopPropagation()
+                setHoveredPoint(null)
+                setShowUserPopup((currentValue) => !currentValue)
+              }}
+              onTouchStart={(event) => {
+                event.stopPropagation()
+                setHoveredPoint(null)
+                setShowUserPopup((currentValue) => !currentValue)
+              }}
             >
               <circle
                 cx={userPointX}
                 cy={userPointY}
-                r="9"
+                r="24"
+                className="chart-touch-target"
+              />
+              <circle
+                cx={userPointX}
+                cy={userPointY}
+                r="12"
                 className="sleep-user-marker-ring"
               />
               <circle
                 cx={userPointX}
                 cy={userPointY}
-                r="5"
+                r="6"
                 className="sleep-user-marker-dot"
               />
             </g>
@@ -280,10 +311,10 @@ function SleepDurationChart({ userSleepBand }) {
         {showUserPopup && userPoint && (
           <button
             type="button"
-            className="sleep-user-popup"
+            className="sleep-user-popup user-result-popup"
             onClick={() => setShowUserPopup(false)}
           >
-            <div className="sleep-user-popup-label">Your usual sleep</div>
+            <div className="sleep-user-popup-label">Your result</div>
             <div className="sleep-user-popup-title">{userPoint.fullLabel ?? userPoint.label}</div>
             <div className="sleep-user-popup-copy">
               Around {userPoint.value.toFixed(1)}% of people aged 18-24 are in this range.
@@ -298,6 +329,18 @@ function SleepDurationChart({ userSleepBand }) {
             <div className="sleep-tooltip-value">{hoveredPoint.value.toFixed(1)}% of people</div>
           </div>
         )}
+      </div>
+
+      <div className="chart-source-note">
+        Source:{' '}
+        <a
+          href="https://www.abs.gov.au/statistics/health/health-conditions-and-risks/measured-physical-activity-and-sleep/2023"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Australian Bureau of Statistics (ABS) measured physical activity and sleep survey data
+        </a>
+        , analysed for the 18-24 age group.
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-.mg-page { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; font-family: 'Inter', sans-serif; }
+.mg-page { max-width: 1100px; margin: 0 auto; padding: 96px 24px 80px; font-family: 'Inter', sans-serif; }
 
 .mg-hero { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #eff6ff, #f0f9ff); border-radius: 20px; padding: 32px 40px; border: 1px solid #dbeafe; margin-bottom: 32px; }
 .mg-hero-text h1 { font-size: 32px; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; letter-spacing: -0.5px; }
@@ -22,3 +22,83 @@
 
 .mg-play-btn { padding: 12px 28px; color: white; border: none; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .mg-play-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+
+/* ── Tab switcher ────────────────────────────────────────────────────────── */
+.mg-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 28px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 6px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.mg-tab {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-align: center;
+}
+.mg-tab:hover { color: #0d1b2a; background: #f1f5f9; }
+.mg-tab.active {
+  background: #0d1b2a;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* ── Shared panel wrapper ─────────────────────────────────────────────────── */
+.mg-panel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.mg-panel-header { margin-bottom: 20px; }
+.mg-panel-title { font-size: 22px; font-weight: 700; color: #0d1b2a; margin-bottom: 4px; letter-spacing: -0.3px; }
+.mg-panel-sub { font-size: 14px; color: #64748b; font-weight: 500; }
+
+/* ── Leaderboard (reuse lb- classes from MiniGames) ─────────────────────── */
+.lb-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.lb-tab { padding: 8px 16px; border-radius: 50px; border: 1.5px solid #e2e8f0; background: white; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+.lb-tab:hover { border-color: #94a3b8; color: #0d1b2a; }
+.lb-tab.active { background: #f8fafc; font-weight: 700; }
+.lb-hint { font-size: 12px; color: #94a3b8; font-weight: 500; margin-bottom: 16px; }
+.lb-loading { text-align: center; padding: 40px; color: #94a3b8; font-size: 15px; }
+.lb-empty { text-align: center; padding: 48px; color: #94a3b8; font-size: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lb-empty-icon { font-size: 40px; }
+.lb-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.lb-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; transition: all 0.2s; }
+.lb-row:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.lb-top-1 { background: linear-gradient(135deg, #fffbeb, #fef9e7); border-color: #fcd34d; }
+.lb-top-2 { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-color: #cbd5e1; }
+.lb-top-3 { background: linear-gradient(135deg, #fff7ed, #fef3e7); border-color: #fed7aa; }
+.lb-me { box-shadow: 0 0 0 2px #2563eb40; border-color: #bfdbfe !important; background: #eff6ff !important; }
+.lb-rank { font-size: 20px; width: 36px; text-align: center; flex-shrink: 0; font-weight: 700; color: #64748b; }
+.lb-name { flex: 1; font-size: 15px; font-weight: 600; color: #0d1b2a; display: flex; align-items: center; gap: 8px; }
+.lb-you-badge { font-size: 11px; font-weight: 700; background: #2563eb; color: white; padding: 2px 8px; border-radius: 50px; }
+.lb-score { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; flex-shrink: 0; }
+.lb-footer { font-size: 13px; color: #94a3b8; text-align: center; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.lb-footer strong { color: #374151; }
+
+/* ── Achievements grid (reuse Progress.css classes) ──────────────────────── */
+.achievements-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+@media (max-width: 640px) {
+  .mg-tabs { width: 100%; }
+  .mg-tab { flex: 1; text-align: center; padding: 10px 12px; font-size: 13px; }
+  .achievements-grid { grid-template-columns: 1fr; }
+}

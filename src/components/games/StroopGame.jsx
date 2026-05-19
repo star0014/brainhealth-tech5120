@@ -15,8 +15,9 @@
 //   onSwitchGame — unused but kept for forward-compatibility with future hub designs
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useRef } from 'react'
-import { useAuth } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import './Game.css'
+import { getDisplayName } from '../../utils/displayName'
 
 const API = import.meta.env.VITE_API_URL || 'https://brainhealth-iteration2-production.up.railway.app/api'
 
@@ -53,21 +54,65 @@ function generateRound() {
 const OtherGames = ({ onBack }) => (
   <div className="other-games">
     <div className="other-games-label">Try more games</div>
+
     <div className="other-games-row">
-      <button className="other-game-btn" onClick={onBack} data-color="#2563eb">
-        <span className="other-game-name">Reaction Test</span>
-        <span className="other-game-sub">Processing Speed</span>
+
+      {/* Reaction Test */}
+      <button className="other-game-card" onClick={onBack}>
+        <div
+          className="other-game-card-icon"
+          style={{
+            background: '#2563eb15',
+            border: '1px solid #2563eb30'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+
+        <div className="other-game-card-info">
+          <div className="other-game-card-name">Reaction Test</div>
+          <div className="other-game-card-skill" style={{ color: '#2563eb' }}>
+            Processing Speed
+          </div>
+        </div>
+
+        <div className="other-game-card-arrow">→</div>
       </button>
-      <button className="other-game-btn" onClick={onBack} data-color="#7c3aed">
-        <span className="other-game-name">Memory Match</span>
-        <span className="other-game-sub">Working Memory</span>
+
+      {/* Memory Match */}
+      <button className="other-game-card" onClick={onBack}>
+        <div
+          className="other-game-card-icon"
+          style={{
+            background: '#7c3aed15',
+            border: '1px solid #7c3aed30'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+          </svg>
+        </div>
+
+        <div className="other-game-card-info">
+          <div className="other-game-card-name">Memory Match</div>
+          <div className="other-game-card-skill" style={{ color: '#7c3aed' }}>
+            Working Memory
+          </div>
+        </div>
+
+        <div className="other-game-card-arrow">→</div>
       </button>
+
     </div>
   </div>
 )
 
 function StroopGame({ onBack, onSwitchGame }) {
   const { getToken } = useAuth()
+  const { user } = useUser()
 
   // phase: 'intro' → show instructions; 'playing' → active game; 'done' → results
   const [phase,      setPhase]      = useState('intro')
@@ -103,12 +148,17 @@ function StroopGame({ onBack, onSwitchGame }) {
   async function saveScore() {
     try {
       const token = await getToken()
-      if (!token) return  // guest users — no Clerk token, skip saving
+      const guestId = !token ? localStorage.getItem('bb_guest_id') : null
+      if (!token && !guestId) return
+      const headers = token
+        ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        : { 'X-Guest-ID': guestId, 'Content-Type': 'application/json' }
       await fetch(`${API}/games`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           game_id: 'stroop',
+          display_name: getDisplayName(user?.id, user?.firstName),
           score,  // correct answers count (raw); accuracy % is in metadata
           metadata: {
             total_rounds: total,

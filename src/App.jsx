@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// App.jsx — root routing component for BrainBoost.
+// App.jsx — root routing component for CogniCompass.
 //
 // Responsibilities:
 //   1. Define all client-side routes using React Router v7.
@@ -22,8 +22,6 @@ import ArticleHub from './pages/ArticleHub'
 import HabitTracker from './pages/HabitTracker'
 import Progress from './pages/Progress'
 import MiniGames from './pages/MiniGames'
-import ProjectLogin from './pages/ProjectLogin'
-import { hasProjectAccess } from './utils/projectAuth'
 import { getSnapshot, hasCompletedOnboarding } from './utils/recommendations'
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
@@ -136,19 +134,7 @@ function RequireAuth({ children }) {
   )
 }
 
-// RequireProjectAccess: guards every route except /login.
-// If the project gate has not been passed (bb_project_auth !== 'true' in sessionStorage),
-// the user is redirected to /login. The `from` location is passed as state so they
-// return to the original destination after authenticating.
-function RequireProjectAccess({ children }) {
-  const location = useLocation()
 
-  if (!hasProjectAccess()) {
-    return <Navigate to="/login" replace state={{ from: location }} />
-  }
-
-  return children
-}
 
 // RequireCompletedOnboarding: redirects to /onboarding if the user has not yet
 // completed the questionnaire. Applied to pages that depend on a stored snapshot
@@ -190,29 +176,26 @@ export default function App() {
       {/* HandleAuthTransition: invisible component that handles guest→user migration */}
       <HandleAuthTransition />
       <Routes>
-        {/* /login: the project gate page — no guards wrap it */}
-        <Route path="/login" element={<ProjectLogin />} />
-
         {/* / : landing / home page */}
-        <Route path="/" element={<RequireProjectAccess><Home /></RequireProjectAccess>} />
+        <Route path="/" element={<Home />} />
 
         {/* /onboarding : 4-question brain health questionnaire */}
-        <Route path="/onboarding" element={<RequireProjectAccess><OnboardingRoute /></RequireProjectAccess>} />
+        <Route path="/onboarding" element={<OnboardingRoute />} />
 
         {/* /dashboard : main results screen — requires completed onboarding */}
-        <Route path="/dashboard" element={<RequireProjectAccess><RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><Dashboard /></RequireCompletedOnboarding></RequireAuth></RequireProjectAccess>} />
+        <Route path="/dashboard" element={<><RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><Dashboard /></RequireCompletedOnboarding></RequireAuth></>} />
 
         {/* /habits : daily check-in and habit history */}
-        <Route path="/habits"    element={<RequireProjectAccess><RequireAuth><Navbar /><GuestBanner /><HabitTracker /></RequireAuth></RequireProjectAccess>} />
+        <Route path="/habits"    element={<RequireAuth><Navbar /><GuestBanner /><HabitTracker /></RequireAuth>} />
 
         {/* /progress : streak, milestones, and game history */}
-        <Route path="/progress"  element={<RequireProjectAccess><RequireAuth><Navbar /><GuestBanner /><Progress /></RequireAuth></RequireProjectAccess>} />
+        <Route path="/progress"  element={<RequireAuth><Navbar /><GuestBanner /><Progress /></RequireAuth>} />
 
         {/* /games : mini games hub — open to all (no RequireAuth) */}
-        <Route path="/games"     element={<RequireProjectAccess><Navbar /><GuestBanner /><MiniGames /></RequireProjectAccess>} />
+        <Route path="/games"     element={<><Navbar /><GuestBanner /><MiniGames /></>} />
 
         {/* /articles : article hub — requires completed onboarding for personalised picks */}
-        <Route path="/articles"  element={<RequireProjectAccess><RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><ArticleHub /></RequireCompletedOnboarding></RequireAuth></RequireProjectAccess>} />
+        <Route path="/articles"  element={<RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><ArticleHub /></RequireCompletedOnboarding></RequireAuth>} />
       </Routes>
     </BrowserRouter>
   )

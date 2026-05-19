@@ -24,8 +24,9 @@
 //   onBack — callback to return to the MiniGames hub
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useRef } from 'react'
-import { useAuth } from '@clerk/clerk-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import './Game.css'
+import { getDisplayName } from '../../utils/displayName'
 
 const API = import.meta.env.VITE_API_URL || 'https://brainhealth-iteration2-production.up.railway.app/api'
 
@@ -36,14 +37,55 @@ const STATES = { WAITING: 'waiting', READY: 'ready', GO: 'go', RESULT: 'result',
 const OtherGames = ({ onBack }) => (
   <div className="other-games">
     <div className="other-games-label">Try more games</div>
+
     <div className="other-games-row">
-      <button className="other-game-btn" onClick={onBack}>
-        <span className="other-game-name">Memory Match</span>
-        <span className="other-game-sub">Working Memory</span>
+      <button className="other-game-card" onClick={onBack}>
+        <div
+          className="other-game-card-icon"
+          style={{
+            background: '#7c3aed15',
+            border: '1px solid #7c3aed30'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+          </svg>
+        </div>
+
+        <div className="other-game-card-info">
+          <div className="other-game-card-name">Memory Match</div>
+          <div className="other-game-card-skill" style={{ color: '#7c3aed' }}>
+            Working Memory
+          </div>
+        </div>
+
+        <div className="other-game-card-arrow">→</div>
       </button>
-      <button className="other-game-btn" onClick={onBack}>
-        <span className="other-game-name">Stroop Test</span>
-        <span className="other-game-sub">Attention Control</span>
+
+      <button className="other-game-card" onClick={onBack}>
+        <div
+          className="other-game-card-icon"
+          style={{
+            background: '#f59e0b15',
+            border: '1px solid #f59e0b30'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+
+        <div className="other-game-card-info">
+          <div className="other-game-card-name">Stroop Test</div>
+          <div className="other-game-card-skill" style={{ color: '#f59e0b' }}>
+            Attention Control
+          </div>
+        </div>
+
+        <div className="other-game-card-arrow">→</div>
       </button>
     </div>
   </div>
@@ -51,8 +93,10 @@ const OtherGames = ({ onBack }) => (
 
 function ReactionGame({ onBack }) {
   const { getToken } = useAuth()
+  const { user } = useUser()
 
   const [state,        setState]        = useState(STATES.WAITING)  // current phase of the state machine
+  const [phase,        setPhase]        = useState('intro')
   const [reactionTime, setReactionTime] = useState(null)            // most recent round's reaction time (ms)
   const [results,      setResults]      = useState([])              // array of reaction times for all rounds
   const [round,        setRound]        = useState(0)               // how many rounds have been completed
@@ -80,14 +124,19 @@ function ReactionGame({ onBack }) {
   async function saveScore(avgMs, allResults) {
     try {
       const token = await getToken()
-      if (!token) return  // guest users — no Clerk token, skip saving
+      const guestId = !token ? localStorage.getItem('bb_guest_id') : null
+      if (!token && !guestId) return
+      const headers = token
+        ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        : { 'X-Guest-ID': guestId, 'Content-Type': 'application/json' }
       await fetch(`${API}/games`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           game_id: 'reaction',
-          score: avgMs,           // primary metric stored in the score column
-          metadata: { rounds: allResults }  // per-round breakdown stored in metadata
+          display_name: getDisplayName(user?.id, user?.firstName),
+          score: avgMs,
+          metadata: { rounds: allResults }
         })
       })
       setSaved(true)
@@ -165,10 +214,90 @@ function ReactionGame({ onBack }) {
         <div className="game-rounds">{round} / {TOTAL_ROUNDS}</div>
       </div>
 
-      {/* ── Active game area ──────────────────────────────────────────────────── */}
       {/* The reaction-box CSS class is extended with the state name to drive background colour:
           .reaction-box.waiting → grey, .reaction-box.go → green, etc. */}
-      {!done ? (
+      {/* ── Intro Screen ───────────────────────────────────────────────────── */}
+      {phase === 'intro' ? (
+
+        <div className="stroop-intro-card">
+
+          <div className="stroop-intro-demo">
+
+            <div
+              className="stroop-demo-word"
+              style={{
+                color: '#2563eb',
+                fontSize: 54
+              }}
+            >
+              TAP!
+            </div>
+
+            <div className="stroop-demo-arrow">→</div>
+
+            <div className="stroop-demo-answer">
+              <span>React</span>
+
+              <div
+                className="stroop-demo-chip"
+                style={{
+                  background: '#eff6ff',
+                  color: '#2563eb',
+                  border: '2px solid #2563eb'
+                }}
+              >
+                Fast
+              </div>
+            </div>
+
+          </div>
+
+          <div className="stroop-intro-rules">
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">👀</span>
+              <span>
+                Wait for the screen to turn <strong>green</strong>
+              </span>
+            </div>
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">⚡</span>
+              <span>
+                Tap as <strong>quickly</strong> as possible
+              </span>
+            </div>
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">🚫</span>
+              <span>
+                Don’t tap too early or it counts as a false start
+              </span>
+            </div>
+
+            <div className="stroop-rule">
+              <span className="stroop-rule-icon">📊</span>
+              <span>
+                Complete <strong>5 rounds</strong> and get your average reaction time
+              </span>
+            </div>
+
+          </div>
+
+          <button
+            className="stroop-start-btn"
+            style={{
+              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+              boxShadow: '0 8px 24px rgba(37,99,235,0.35)'
+            }}
+            onClick={() => setPhase('playing')}
+          >
+            Start Game →
+          </button>
+
+        </div>
+
+      ) : !done ? (
         <div className={`reaction-box ${state}`} onClick={handleClick}>
           {/* WAITING: invite the player to start */}
           {state === STATES.WAITING && (

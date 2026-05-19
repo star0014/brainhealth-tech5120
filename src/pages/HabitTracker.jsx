@@ -74,11 +74,11 @@ const RunIcon = () => (
 
 // ── Utility: sleep band → numeric hours ────────────────────────────────────
 // Converts the sleep_hours string stored in habits to a decimal number for charting.
-// '< 6' → 5.5, '9+' → 9, numeric strings ('6', '7', '8') → their float value.
+// '< 6' → 5.5, '10+' → 10.5, numeric strings ('6', '7', '8') → their float value.
 const sleepToNum = s => {
   if (!s) return null
   if (s === '< 6') return 5.5
-  if (s === '9+') return 9
+  if (s === '9+' || s === '10+') return 10.5
   return parseFloat(s)
 }
 
@@ -93,8 +93,14 @@ function HabitTracker() {
   const [view,         setView]         = useState('checkin')  // 'checkin' | 'history'
   const [historyRange, setHistoryRange] = useState(7)      // 7 or 30 day history window
   const [successMsg,   setSuccessMsg]   = useState('')     // transient success feedback text
+  const [showGuide,    setShowGuide]    = useState(() => localStorage.getItem('bb_ht_guide_dismissed') !== 'true')
   // Form values: initialised empty, pre-populated if a today entry exists.
   const [form, setForm] = useState({ sleep_hours: '', screen_time: '', physical_activity: false })
+
+  const dismissGuide = () => {
+    localStorage.setItem('bb_ht_guide_dismissed', 'true')
+    setShowGuide(false)
+  }
 
   // today: ISO date string 'YYYY-MM-DD' in the local timezone, used to match DB/localStorage records.
   const today = new Date().toLocaleDateString('en-CA')
@@ -230,15 +236,11 @@ function HabitTracker() {
           <p>Small daily habits lead to big changes in brain health.</p>
         </div>
         <div className="ht-hero-visual">
-          {/* Decorative brain illustration with pulsing dots */}
-          <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" width="200" height="160">
-            <circle cx="100" cy="80" r="60" fill="#eff6ff" stroke="#bfdbfe" strokeWidth="1.5"/>
-            <path d="M70,80 C70,65 80,55 95,55 C100,45 110,42 118,48 C126,42 136,45 138,55 C148,58 152,68 148,78 C152,85 150,95 142,98 C140,108 130,112 122,108 C116,114 106,114 100,108 C94,114 84,112 80,106 C72,104 68,94 72,86 C68,83 68,80 70,80Z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.5"/>
-            <line x1="100" y1="55" x2="100" y2="108" stroke="#93c5fd" strokeWidth="1" strokeDasharray="3,2"/>
-            <circle cx="100" cy="65" r="3" fill="#2563eb"><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/></circle>
-            <circle cx="85" cy="85" r="2.5" fill="#3b82f6"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/></circle>
-            <circle cx="115" cy="85" r="2.5" fill="#3b82f6"><animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/></circle>
-          </svg>
+          <img
+            src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=300&q=80"
+            alt="Habit Tracker"
+            className="hero-illustration"
+          />
         </div>
       </div>
 
@@ -251,21 +253,58 @@ function HabitTracker() {
       {/* ── Check-in tab ──────────────────────────────────────────────────────── */}
       {view === 'checkin' && (
         <div className="ht-checkin">
+
+          {/* Guide banner — shown until the user dismisses it */}
+          {showGuide && (
+            <div className="ht-guide-banner">
+              <button className="ht-guide-close" onClick={dismissGuide} aria-label="Dismiss guide">×</button>
+              <div className="ht-guide-title">How your check-in updates your score</div>
+              <div className="ht-guide-items">
+                <div className="ht-guide-item">
+                  <span className="ht-guide-icon">💤</span>
+                  <div>
+                    <strong>Sleep</strong>
+                    <span>affects your Rest score on the Dashboard</span>
+                  </div>
+                </div>
+                <div className="ht-guide-item">
+                  <span className="ht-guide-icon">📱</span>
+                  <div>
+                    <strong>Screen time</strong>
+                    <span>affects your Focus score</span>
+                  </div>
+                </div>
+                <div className="ht-guide-item">
+                  <span className="ht-guide-icon">🏃</span>
+                  <div>
+                    <strong>Activity</strong>
+                    <span>affects your Energy score</span>
+                  </div>
+                </div>
+              </div>
+              <div className="ht-guide-footer">Check in daily to keep Brainy's score up to date.</div>
+            </div>
+          )}
+
           {/* Reminder notice if the user already has an entry for today */}
           {todayCheckin && (
             <div className="ht-already-done">You've already checked in today — update your entry below if needed.</div>
           )}
           <div className="ht-card">
+            <div className="ht-data-note">
+              Your daily check-ins help CogniCompass identify patterns in sleep, screen time, movement, and progress. This information is used only to personalise your dashboard, insights, and streak history.
+            </div>
 
-            {/* Sleep hours field — 5 option buttons (< 6 to 9+) */}
+            {/* Sleep hours field — 5 option buttons (< 6 to 10+) */}
             <div className="ht-field">
               <label><MoonIcon /> Sleep Hours</label>
               <p className="ht-field-desc">How many hours did you sleep last night?</p>
               <div className="ht-options">
-                {['< 6', '6', '7', '8', '9+'].map(val => (
+                {['< 6', '6', '7', '8', '10+'].map(val => (
                   <button key={val} className={`ht-option ${form.sleep_hours === val ? 'selected' : ''}`} onClick={() => setForm({ ...form, sleep_hours: val })}>{val} hrs</button>
                 ))}
               </div>
+              <div className="ht-field-hint">🎯 7–8 hrs is the sweet spot for brain recovery</div>
             </div>
 
             {/* Screen time field — 5 option buttons (< 2h to 8h+) */}
@@ -277,6 +316,7 @@ function HabitTracker() {
                   <button key={val} className={`ht-option ${form.screen_time === val ? 'selected' : ''}`} onClick={() => setForm({ ...form, screen_time: val })}>{val}</button>
                 ))}
               </div>
+              <div className="ht-field-hint">🎯 Under 2h, especially in evenings, protects your sleep quality</div>
             </div>
 
             {/* Physical activity field — binary toggle (Yes / No) */}
@@ -287,6 +327,7 @@ function HabitTracker() {
                 <button className={`ht-toggle-btn ${form.physical_activity ? 'active' : ''}`}  onClick={() => setForm({ ...form, physical_activity: true })}>Yes, I was active</button>
                 <button className={`ht-toggle-btn ${!form.physical_activity ? 'active' : ''}`} onClick={() => setForm({ ...form, physical_activity: false })}>No activity today</button>
               </div>
+              <div className="ht-field-hint">🎯 Even a 20-min walk counts — consistency beats intensity</div>
             </div>
 
             {/* Transient success/update confirmation message */}

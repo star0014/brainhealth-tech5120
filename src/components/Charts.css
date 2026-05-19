@@ -144,7 +144,7 @@
 
 /* The text inside pills - auto sized via SVG font-size */
 .sleep-chart-svg text.sleep-axis-text:not(.left):not(.sleep-average-label) {
-  font-size: 11px;
+  font-size: 10px;
   fill: #0d1b2a;
   font-weight: 600;
 }
@@ -166,10 +166,17 @@
 /* ── User marker ── */
 .sleep-user-marker-group { cursor: pointer; }
 
+.chart-touch-target {
+  fill: transparent;
+  pointer-events: all;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
 .sleep-user-marker-ring {
-  fill: rgba(217, 119, 6, 0.18);
+  fill: rgba(255, 255, 255, 0.86);
   stroke: #d97706;
-  stroke-width: 2;
+  stroke-width: 3;
 }
 
 .sleep-user-marker-dot {
@@ -191,6 +198,11 @@
   cursor: pointer;
   min-width: 200px;
   z-index: 10;
+}
+
+.user-result-popup {
+  border-color: rgba(217, 119, 6, 0.32);
+  box-shadow: 0 10px 30px rgba(217, 119, 6, 0.18);
 }
 
 .sleep-user-popup-label {
@@ -249,4 +261,23 @@
   font-size: 13px;
   color: #374151;
   font-weight: 500;
+}
+
+.chart-source-note {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.chart-source-note a {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chart-source-note a:hover {
+  text-decoration: underline;
 }

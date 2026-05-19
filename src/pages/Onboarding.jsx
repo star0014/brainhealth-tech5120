@@ -47,7 +47,7 @@ const QUESTIONNAIRE_STEPS = [
         { label: '6–7 hrs',      sub: 'a bit short',      emoji: '😴' },
         { label: '7–8 hrs',      sub: 'pretty solid',     emoji: '😌' },
         { label: '8–9 hrs',      sub: 'well rested',      emoji: '😊' },
-        { label: '9+ hrs',       sub: 'love to see it',   emoji: '🌟' },
+        { label: '10+ hrs',      sub: 'long sleep',       emoji: '🌟' },
       ],
     },
   },
@@ -265,6 +265,12 @@ function Onboarding() {
         {/* ── Question step ─────────────────────────────────────────────────── */}
         {!isResultStep && (
           <div>
+            {step === 0 && (
+              <div className="ob-data-notice">
+                Before you start: CogniCompass uses your answers to create a personalised brain-health snapshot and recommend relevant articles. The questionnaire items are informed by published journal research on sleep, screen time, physical activity, and wellbeing habits. CogniCompass is not a medical or diagnostic tool, and your responses are only used to support app features such as insights, habit tracking, progress, and recommendations.
+              </div>
+            )}
+
             {/* Domain header banner: accent colour and gradient from currentStep config */}
             <div className="ob-domain-header" style={{ background: currentStep.accentBg }}>
               <span className="ob-domain-emoji">{currentStep.emoji}</span>
@@ -315,14 +321,12 @@ function Onboarding() {
 
             {/* Navigation footer: Back (hidden on first step) and Continue */}
             <div className="ob-footer">
-              {step > 0 ? (
+              {step > 0 && (
                 <button type="button" className="btn-back" onClick={prevStep}>Back</button>
-              ) : (
-                <div className="btn-spacer"></div>  // placeholder to keep Continue right-aligned
               )}
               <button
                 type="button"
-                className="btn-next"
+                className={`btn-next${step === 0 ? ' full' : ''}`}
                 style={{ background: `linear-gradient(135deg, ${currentStep.accent}, ${currentStep.accent}cc)` }}
                 onClick={nextStep}
               >
@@ -411,7 +415,7 @@ function Onboarding() {
 
             {/* Legal/medical disclaimer — required for any health-adjacent assessment app */}
             <div className="disclaimer">
-              BrainBoost provides lifestyle awareness only. It is not a medical, psychological, or diagnostic assessment.
+              CogniCompass provides lifestyle awareness only. It is not a medical, psychological, or diagnostic assessment.
             </div>
 
             <div className="ob-footer">

@@ -49,6 +49,10 @@ function ArticleHub() {
         </div>
       </div>
 
+      <div className="hub-data-note">
+        Recommended articles are selected based on your onboarding snapshot and lower-scoring habit domains. These resources are educational only and do not replace professional advice.
+      </div>
+
       {/* ── Personalised recommendations panel ─────────────────────────────── */}
       {/* Only shown when a snapshot exists (i.e. the user has completed onboarding).
           The panel lists up to 4 articles prioritised by the user's weakest domains. */}
@@ -56,8 +60,7 @@ function ArticleHub() {
         <div className="recommendation-panel">
           <div className="recommendation-eyebrow">Recommended for your score</div>
           <div className="recommendation-copy">
-            Based on your latest snapshot, these articles focus first on the lower-scoring areas most
-            likely to affect study, energy, stress, and social wellbeing.
+            Based on your latest snapshot, these articles focus first on the lower-scoring areas most likely to affect study, energy, stress, and social wellbeing.
           </div>
           {/* Pill-style buttons that open the article detail modal directly */}
           <div className="recommended-grid">

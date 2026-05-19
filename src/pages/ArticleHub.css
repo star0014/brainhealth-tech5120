@@ -1,7 +1,7 @@
 .hub-wrap {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 80px 1.25rem 4rem;
+    padding: 110px 1.25rem 4rem;
   }
   
   .hub-header {
@@ -17,8 +17,20 @@
   
   .hub-sub {
     font-size: 14px;
-    color: #5A7A70;
+    color: #374151;
     line-height: 1.6;
+  }
+
+  .hub-data-note {
+    background: #f8fafc;
+    border: 1px solid rgba(74, 158, 219, 0.18);
+    border-left: 4px solid #4A9EDB;
+    border-radius: 14px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 13px 16px;
+    margin-bottom: 1.25rem;
   }
 
   .recommendation-panel {
@@ -40,7 +52,7 @@
 
   .recommendation-copy {
     font-size: 14px;
-    color: #37544A;
+    color: #1e293b;
     line-height: 1.6;
     margin-bottom: 1rem;
   }
@@ -94,7 +106,7 @@
     transition: all 0.18s;
     border: 0.5px solid rgba(29, 158, 117, 0.3);
     background: white;
-    color: #5A7A70;
+    color: #374151;
   }
   
   .filter-btn:hover {
@@ -202,7 +214,7 @@
   
   .read-time {
     font-size: 11px;
-    color: #90B4D4;
+    color: #374151;
     flex-shrink: 0;
   }
   
@@ -216,7 +228,7 @@
   
   .article-summary {
     font-size: 13px;
-    color: #5A7A70;
+    color: #374151;
     line-height: 1.6;
   }
   
@@ -317,7 +329,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #90B4D4;
+    color: #374151;
     flex-shrink: 0;
     margin-left: 12px;
   }
@@ -333,7 +345,7 @@
   
   .modal-summary {
     font-size: 15px;
-    color: #5A7A70;
+    color: #374151;
     line-height: 1.7;
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
@@ -362,7 +374,7 @@
   .modal-source-label {
     font-size: 11px;
     font-weight: 600;
-    color: #90B4D4;
+    color: #374151;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     margin-bottom: 3px;

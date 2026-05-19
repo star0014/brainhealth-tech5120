@@ -11,7 +11,7 @@
 //     simply invisible for guests (Clerk renders nothing if no user is signed in).
 // ─────────────────────────────────────────────────────────────────────────────
 import { Link, useLocation } from 'react-router-dom'
-import { UserButton, useUser } from '@clerk/clerk-react'
+import { UserButton, useUser, SignInButton } from '@clerk/clerk-react'
 import './Navbar.css'
 import { getSnapshot, hasCompletedOnboarding } from '../utils/recommendations'
 
@@ -23,18 +23,18 @@ function Navbar() {
   const canAccessProtectedPages = hasCompletedOnboarding(snapshot)
 
   // Determine whether the "Onboarding" tab should be hidden.
-  // It is hidden if the user is a signed-in Clerk user OR if they are a guest who
-  // has already completed the questionnaire.
   const isGuest = localStorage.getItem('bb_is_guest') === 'true'
   const guestDone = isGuest && canAccessProtectedPages
   const { isSignedIn } = useUser()
-  const hideOnboarding = guestDone || isSignedIn  // true → don't show the Onboarding tab
+  const hideOnboarding = guestDone || isSignedIn
+
+
 
   return (
     <nav className="navbar">
       {/* Left side: brand logo and home icon button */}
       <div className="navbar-left">
-        {/* BrainBoost brand name — clicking takes the user back to the marketing home page */}
+        {/* CogniCompass brand name — clicking takes the user back to the marketing home page */}
         <Link to="/" className="navbar-logo">Brain<span>Boost</span></Link>
         {/* Home icon button — an alternative shortcut to the home page */}
         <Link to="/" className="navbar-home-btn" title="Back to Home">
@@ -67,7 +67,30 @@ function Navbar() {
 
       {/* Right side: Clerk UserButton — shows the user's avatar and a sign-out option.
           Renders nothing for guest users since they have no Clerk account. */}
-      <UserButton />
+      <div className="navbar-auth">
+
+        {isSignedIn ? (
+
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: {
+                  width: '42px',
+                  height: '42px'
+                }
+              }
+            }}
+          />
+
+        ) : (
+
+          <SignInButton mode="modal">
+            <button className="navbar-login-btn">Sign In</button>
+          </SignInButton>
+
+        )}
+
+      </div>
     </nav>
   )
 }

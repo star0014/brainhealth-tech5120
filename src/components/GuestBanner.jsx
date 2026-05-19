@@ -16,22 +16,7 @@ import { SignUpButton } from '@clerk/clerk-react'
 import './GuestBanner.css'
 
 function GuestBanner() {
-  // Check the guest flag; if not set, render nothing.
-  const isGuest = localStorage.getItem('bb_is_guest') === 'true'
-  if (!isGuest) return null
-
-  return (
-    <div className="guest-banner">
-      {/* Informational text explaining the limitation of guest mode */}
-      <span>You are browsing as a guest. Your data is saved on this device only.</span>
-      {/* Clerk's SignUpButton opens the sign-up modal without navigating away.
-          After sign-up, HandleAuthTransition in App.jsx detects the new Clerk session
-          and automatically migrates localStorage habits to the user's database account. */}
-      <SignUpButton mode="modal">
-        <button className="guest-banner-btn">Sign up to save across devices</button>
-      </SignUpButton>
-    </div>
-  )
+  return null
 }
 
 export default GuestBanner

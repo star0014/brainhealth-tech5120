@@ -51,9 +51,9 @@ const SERIES = {
 }
 
 // SVG canvas dimensions and margins
-const CHART_WIDTH  = 640
-const CHART_HEIGHT = 320
-const MARGIN = { top: 20, right: 24, bottom: 52, left: 42 }
+const CHART_WIDTH  = 820
+const CHART_HEIGHT = 360
+const MARGIN = { top: 24, right: 64, bottom: 82, left: 72 }
 const INNER_WIDTH  = CHART_WIDTH  - MARGIN.left - MARGIN.right
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top  - MARGIN.bottom
 const MAX_Y = 45  // y-axis cap at 45%
@@ -73,6 +73,11 @@ function xScaleContinuous(position, total) {
 // Maps a percentage value to an SVG y pixel position (y increases downward in SVG)
 function yScale(value) {
   return MARGIN.top + INNER_HEIGHT - (value / MAX_Y) * INNER_HEIGHT
+}
+
+// Keeps long x-axis labels inside their pill and away from chart edges.
+function getAxisPillWidth(label) {
+  return Math.max(86, label.length * 7.5 + 26)
 }
 
 // Builds the SVG path string for the line itself
@@ -126,6 +131,14 @@ function PhysicalActivityChart({ userActivityBand }) {
   // Index of the user's band in the current series array (used to calculate x position)
   const userPointIndex = userPoint ? current.points.findIndex((point) => point.fullLabel === userPoint.fullLabel) : -1
   const averageX       = xScaleContinuous(current.averagePosition, current.points.length)
+  const userPointX     = userPointIndex >= 0 ? xScale(userPointIndex, current.points.length) : null
+  const userPointY     = userPoint ? yScale(userPoint.value) : null
+
+  function showPointTooltip(point, event) {
+    event.stopPropagation()
+    setHoveredPoint(point)
+    setShowUserPopup(false)
+  }
 
   return (
     <div className="physical-chart-card">
@@ -163,7 +176,7 @@ function PhysicalActivityChart({ userActivityBand }) {
         </div>
       </div>
 
-      <div className="sleep-chart-shell">
+      <div className="sleep-chart-shell" onClick={() => setHoveredPoint(null)}>
         <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="sleep-chart-svg" role="img">
           <defs>
             <linearGradient id="physical-area-gradient" x1="0" x2="0" y1="0" y2="1">
@@ -187,14 +200,17 @@ function PhysicalActivityChart({ userActivityBand }) {
             </g>
           ))}
 
-          {current.points.map((point, index) => (
-            <g key={point.label} transform={`translate(${xScale(index, current.points.length)} ${MARGIN.top + INNER_HEIGHT + 24})`}>
-              <rect x="-38" y="-13" width="76" height="26" rx="13" className="sleep-axis-pill" />
+          {current.points.map((point, index) => {
+            const pillWidth = getAxisPillWidth(point.label)
+            return (
+            <g key={point.label} transform={`translate(${xScale(index, current.points.length)} ${MARGIN.top + INNER_HEIGHT + 30})`}>
+              <rect x={-pillWidth / 2} y="-15" width={pillWidth} height="30" rx="15" className="sleep-axis-pill" />
               <text y="4" textAnchor="middle" className="sleep-axis-text">
                 {point.label}
               </text>
             </g>
-          ))}
+            )
+          })}
 
           <line
             x1={averageX}
@@ -218,6 +234,8 @@ function PhysicalActivityChart({ userActivityBand }) {
                 key={point.fullLabel}
                 onMouseEnter={() => setHoveredPoint(point)}
                 onMouseLeave={() => setHoveredPoint(null)}
+                onClick={(event) => showPointTooltip(point, event)}
+                onTouchStart={(event) => showPointTooltip(point, event)}
               >
                 <circle
                   cx={xScale(index, current.points.length)}
@@ -230,8 +248,8 @@ function PhysicalActivityChart({ userActivityBand }) {
                 <circle
                   cx={xScale(index, current.points.length)}
                   cy={yScale(point.value)}
-                  r="16"
-                  fill="transparent"
+                  r="24"
+                  className="chart-touch-target"
                 />
               </g>
             )
@@ -240,18 +258,38 @@ function PhysicalActivityChart({ userActivityBand }) {
           {userPoint && userPointIndex >= 0 && (
             <g
               className="sleep-user-marker-group"
-              onClick={() => setShowUserPopup((currentValue) => !currentValue)}
+              onMouseEnter={() => {
+                setHoveredPoint(null)
+                setShowUserPopup(true)
+              }}
+              onMouseLeave={() => setShowUserPopup(false)}
+              onClick={(event) => {
+                event.stopPropagation()
+                setHoveredPoint(null)
+                setShowUserPopup((currentValue) => !currentValue)
+              }}
+              onTouchStart={(event) => {
+                event.stopPropagation()
+                setHoveredPoint(null)
+                setShowUserPopup((currentValue) => !currentValue)
+              }}
             >
               <circle
-                cx={xScale(userPointIndex, current.points.length)}
-                cy={yScale(userPoint.value)}
-                r="9"
+                cx={userPointX}
+                cy={userPointY}
+                r="24"
+                className="chart-touch-target"
+              />
+              <circle
+                cx={userPointX}
+                cy={userPointY}
+                r="12"
                 className="sleep-user-marker-ring"
               />
               <circle
-                cx={xScale(userPointIndex, current.points.length)}
-                cy={yScale(userPoint.value)}
-                r="5"
+                cx={userPointX}
+                cy={userPointY}
+                r="6"
                 className="sleep-user-marker-dot"
               />
             </g>
@@ -261,10 +299,10 @@ function PhysicalActivityChart({ userActivityBand }) {
         {showUserPopup && userPoint && (
           <button
             type="button"
-            className="sleep-user-popup"
+            className="sleep-user-popup user-result-popup"
             onClick={() => setShowUserPopup(false)}
           >
-            <div className="sleep-user-popup-label">Your movement band</div>
+            <div className="sleep-user-popup-label">Your result</div>
             <div className="sleep-user-popup-title">{userPoint.label}</div>
             <div className="sleep-user-popup-copy">
               Around {userPoint.value.toFixed(1)}% of people aged 18-24 are in this range.
@@ -279,6 +317,18 @@ function PhysicalActivityChart({ userActivityBand }) {
             <div className="sleep-tooltip-value">{hoveredPoint.value.toFixed(1)}% of people</div>
           </div>
         )}
+      </div>
+
+      <div className="chart-source-note">
+        Source:{' '}
+        <a
+          href="https://www.abs.gov.au/statistics/health/health-conditions-and-risks/measured-physical-activity-and-sleep/2023"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Australian Bureau of Statistics (ABS) measured physical activity and sleep survey data
+        </a>
+        , analysed for the 18-24 age group.
       </div>
     </div>
   )
