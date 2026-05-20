@@ -22,6 +22,7 @@ import ArticleHub from './pages/ArticleHub'
 import HabitTracker from './pages/HabitTracker'
 import Progress from './pages/Progress'
 import MiniGames from './pages/MiniGames'
+import SmartReminders from './pages/SmartReminders'
 import { getSnapshot, hasCompletedOnboarding } from './utils/recommendations'
 import Footer from './components/Footer'
 
@@ -197,6 +198,7 @@ export default function App() {
 
         {/* /articles : article hub — requires completed onboarding for personalised picks */}
         <Route path="/articles"  element={<><RequireAuth><Navbar /><GuestBanner /><RequireCompletedOnboarding><ArticleHub /></RequireCompletedOnboarding></RequireAuth><Footer /></>} />
+        <Route path="/reminders" element={<><RequireAuth><Navbar /><GuestBanner /><SmartReminders /></RequireAuth><Footer /></>} />
       </Routes>
     </BrowserRouter>
   )

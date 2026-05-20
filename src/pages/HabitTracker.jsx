@@ -94,12 +94,82 @@ function HabitTracker() {
   const [historyRange, setHistoryRange] = useState(7)      // 7 or 30 day history window
   const [successMsg,   setSuccessMsg]   = useState('')     // transient success feedback text
   const [showGuide,    setShowGuide]    = useState(() => localStorage.getItem('bb_ht_guide_dismissed') !== 'true')
+  const [wearableToken, setWearableToken] = useState(null)
+  const [tokenLoading,  setTokenLoading]  = useState(false)
+  const [tokenCopied,   setTokenCopied]   = useState(false)
+  const [quickSleep,    setQuickSleep]    = useState('')
+  const [quickSteps,    setQuickSteps]    = useState('')
+  const [quickSyncing,  setQuickSyncing]  = useState(false)
+  const [quickResult,   setQuickResult]   = useState(null)
+  const [lastWatchSync, setLastWatchSync] = useState(null)
   // Form values: initialised empty, pre-populated if a today entry exists.
   const [form, setForm] = useState({ sleep_hours: '', screen_time: '', physical_activity: false })
 
   const dismissGuide = () => {
     localStorage.setItem('bb_ht_guide_dismissed', 'true')
     setShowGuide(false)
+  }
+
+  async function fetchToken() {
+    if (guest) return
+    setTokenLoading(true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`${API}/habits/token`, { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (data.token) setWearableToken(data.token)
+    } catch (err) { console.error(err) }
+    finally { setTokenLoading(false) }
+  }
+
+  async function regenerateToken() {
+    if (guest) return
+    setTokenLoading(true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`${API}/habits/token/regenerate`, {
+        method: 'POST', headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.token) { setWearableToken(data.token); setTokenCopied(false) }
+    } catch (err) { console.error(err) }
+    finally { setTokenLoading(false) }
+  }
+
+  function copyToken() {
+    if (!wearableToken) return
+    navigator.clipboard.writeText(wearableToken)
+    setTokenCopied(true)
+    setTimeout(() => setTokenCopied(false), 2500)
+  }
+
+  async function quickSync() {
+    if (!wearableToken) return
+    if (!quickSleep && !quickSteps) return
+    setQuickSyncing(true)
+    setQuickResult(null)
+    try {
+      const res = await fetch(`${API}/habits/wearable`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: wearableToken,
+          sleep_minutes: quickSleep ? Number(quickSleep) * 60 : 0,
+          steps: quickSteps ? Number(quickSteps) : 0,
+          date: new Date().toLocaleDateString('en-CA')
+        })
+      })
+      const data = await res.json()
+      if (data.status) {
+        setQuickResult({ ok: true, msg: `Synced! Sleep: ${data.mapped.sleep_hours} · Activity: ${data.mapped.physical_activity ? 'Active ✓' : 'Not active ✗'}` })
+        setLastWatchSync(new Date().toLocaleTimeString())
+      } else {
+        setQuickResult({ ok: false, msg: data.error || 'Sync failed' })
+      }
+    } catch (err) {
+      setQuickResult({ ok: false, msg: 'Network error' })
+    }
+    setQuickSyncing(false)
   }
 
   // today: ISO date string 'YYYY-MM-DD' in the local timezone, used to match DB/localStorage records.
@@ -248,6 +318,7 @@ function HabitTracker() {
       <div className="ht-tabs">
         <button className={`ht-tab ${view === 'checkin'  ? 'active' : ''}`} onClick={() => setView('checkin')}>Today's Check-in</button>
         <button className={`ht-tab ${view === 'history'  ? 'active' : ''}`} onClick={() => setView('history')}>History & Charts</button>
+        {!guest && <button className={`ht-tab ${view === 'watch' ? 'active' : ''}`} onClick={() => { setView('watch'); if (!wearableToken) fetchToken() }}>⌚ Apple Watch</button>}
       </div>
 
       {/* ── Check-in tab ──────────────────────────────────────────────────────── */}
@@ -292,7 +363,7 @@ function HabitTracker() {
           )}
           <div className="ht-card">
             <div className="ht-data-note">
-              Your daily check-ins help CogniCompass identify patterns in sleep, screen time, movement, and progress. This information is used only to personalise your dashboard, insights, and streak history.
+              Your daily check-ins help BrainBoost identify patterns in sleep, screen time, movement, and progress. This information is used only to personalise your dashboard, insights, and streak history.
             </div>
 
             {/* Sleep hours field — 5 option buttons (< 6 to 10+) */}
@@ -446,6 +517,117 @@ function HabitTracker() {
           )}
         </div>
       )}
+
+      {/* ── Apple Watch tab ── */}
+      {view === 'watch' && (
+        <div className="ht-watch">
+          <div className="ht-watch-hero">
+            <div className="ht-watch-hero-left">
+              <div className="ht-watch-badge">⌚ Apple Watch Integration</div>
+              <h2 className="ht-watch-title">Auto-sync your health data</h2>
+              <p className="ht-watch-desc">Use an iPhone Shortcut to automatically send your sleep and activity data from Apple Health to CogniCompass each morning.</p>
+            </div>
+            <div className="ht-watch-hero-right">
+              <div className="ht-watch-stats">
+                <div className="ht-watch-stat"><div className="ht-watch-stat-icon">😴</div><div className="ht-watch-stat-label">Sleep tracked automatically</div></div>
+                <div className="ht-watch-stat"><div className="ht-watch-stat-icon">🏃</div><div className="ht-watch-stat-label">Steps → Activity score</div></div>
+                <div className="ht-watch-stat"><div className="ht-watch-stat-icon">🔄</div><div className="ht-watch-stat-label">Runs every morning</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ht-watch-step">
+            <div className="ht-watch-step-num">1</div>
+            <div className="ht-watch-step-content">
+              <div className="ht-watch-step-title">Copy your personal token</div>
+              <p className="ht-watch-step-desc">This token identifies you when the Shortcut sends data. Keep it private.</p>
+              <div className="ht-watch-token-box">
+                {tokenLoading ? (
+                  <div className="ht-watch-token-loading">Generating token...</div>
+                ) : wearableToken ? (
+                  <>
+                    <code className="ht-watch-token-value">{wearableToken}</code>
+                    <div className="ht-watch-token-actions">
+                      <button className="ht-watch-copy-btn" onClick={copyToken}>{tokenCopied ? '✓ Copied!' : 'Copy token'}</button>
+                      <button className="ht-watch-regen-btn" onClick={regenerateToken}>↻ Regenerate</button>
+                    </div>
+                  </>
+                ) : (
+                  <button className="ht-watch-copy-btn" onClick={fetchToken}>Generate token</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="ht-watch-step">
+            <div className="ht-watch-step-num">2</div>
+            <div className="ht-watch-step-content">
+              <div className="ht-watch-step-title">Set up the iPhone Shortcut</div>
+              <p className="ht-watch-step-desc">On your iPhone, open the Shortcuts app and create a new Shortcut with these actions:</p>
+              <div className="ht-watch-shortcut-steps">
+                {[
+                  { icon: '🏥', action: 'Find Health Samples', detail: 'Type: Sleep Analysis · In Bed · Start: Yesterday · End: Today' },
+                  { icon: '🧮', action: 'Repeat with each + Calculate sum', detail: 'Sum sleep sample durations in minutes → store as SleepMinutes' },
+                  { icon: '👟', action: 'Find Health Samples', detail: 'Type: Steps · Start: Today 12:00 AM · End: Now' },
+                  { icon: '🧮', action: 'Repeat with each + Calculate sum', detail: 'Sum step counts → store as StepCount' },
+                  { icon: '📅', action: 'Format Date', detail: 'Current Date · Custom format: yyyy-MM-dd → store as TodayDate' },
+                  { icon: '🌐', action: 'Get Contents of URL', detail: 'URL: https://brainhealth-iteration2-production.up.railway.app/api/habits/wearable · Method: POST · Body: JSON' },
+                ].map((s, i) => (
+                  <div key={i} className="ht-shortcut-step">
+                    <span className="ht-shortcut-step-icon">{s.icon}</span>
+                    <div>
+                      <div className="ht-shortcut-step-action">{s.action}</div>
+                      <div className="ht-shortcut-step-detail">{s.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="ht-watch-step">
+            <div className="ht-watch-step-num">3</div>
+            <div className="ht-watch-step-content">
+              <div className="ht-watch-step-title">JSON request body</div>
+              <p className="ht-watch-step-desc">In the URL action, set body type to JSON and add these fields:</p>
+              <div className="ht-watch-json">
+                <pre>{`{
+  "token":         "[your token from Step 1]",
+  "sleep_minutes": [SleepMinutes variable],
+  "steps":         [StepCount variable],
+  "date":          "[TodayDate variable]"
+}`}</pre>
+              </div>
+            </div>
+          </div>
+
+          <div className="ht-watch-mapping">
+            <div className="ht-watch-mapping-title">How your data is mapped</div>
+            <div className="ht-watch-mapping-grid">
+              <div className="ht-watch-mapping-card">
+                <div className="ht-watch-mapping-icon">😴</div>
+                <div className="ht-watch-mapping-label">Sleep minutes → Hours bucket</div>
+                <div className="ht-watch-mapping-rows">
+                  {[['< 360 min','→','"Less than 6h"'],['360–419 min','→','"6 hours"'],['420–479 min','→','"7 hours"'],['480–539 min','→','"8 hours"'],['540+ min','→','"9 hours or more"']].map(([a,b,c],i) => (
+                    <div key={i} className="ht-watch-mapping-row"><span>{a}</span><span style={{color:'#2563eb'}}>{b}</span><span>{c}</span></div>
+                  ))}
+                </div>
+              </div>
+              <div className="ht-watch-mapping-card">
+                <div className="ht-watch-mapping-icon">🏃</div>
+                <div className="ht-watch-mapping-label">Step count → Activity</div>
+                <div className="ht-watch-mapping-rows">
+                  {[['7,500+ steps','→','Active ✓'],['< 7,500 steps','→','Not active ✗']].map(([a,b,c],i) => (
+                    <div key={i} className="ht-watch-mapping-row"><span>{a}</span><span style={{color:'#2563eb'}}>{b}</span><span>{c}</span></div>
+                  ))}
+                </div>
+                <div className="ht-watch-mapping-note">Based on WHO recommended daily activity threshold</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
